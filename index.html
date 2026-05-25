@@ -697,9 +697,15 @@ function toggleOneMemberType(mid){
   updateTxMemberOptions(null, checkedIds)
 }
 
+function nowLocal(){
+  const d=new Date()
+  const pad=n=>String(n).padStart(2,'0')
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 function openTransactionModal(tx){
   const now=new Date()
-  document.getElementById('txDate').value=now.toISOString().slice(0,16)
+  document.getElementById('txDate').value=nowLocal()
   document.getElementById('txAmount').value='';document.getElementById('txNote').value='';document.getElementById('txEditId').value=''
   document.getElementById('txModalTitle').textContent='记一笔'
   document.getElementById('txCurrency').value='CNY'
@@ -1010,7 +1016,7 @@ function collectFromMember(id, name, amount){
     id:genId(),
     type:'income',
     amount:parseFloat(amt),
-    date:now.toISOString().slice(0,16),
+    date:nowLocal(),
     note:name+' 交费',
     compId:null,
     memberIds:[id]
