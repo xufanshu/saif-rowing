@@ -138,7 +138,8 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
   <div class="card">
     <div class="card-title">
       快捷操作
-      <button class="btn btn-sm btn-outline" onclick="doExport()">📤 导出</button>
+      <button class="btn btn-sm btn-outline" onclick="doExport()">📤 备份</button>
+      <button class="btn btn-sm btn-outline" onclick="doExportCSV()">📊 Excel</button>
       <button class="btn btn-sm btn-outline" onclick="document.getElementById('importFile').click()">📥 导入</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="doImport(event)">
     </div>
@@ -1415,6 +1416,36 @@ async function doExport(){
   a.download='saif-rowing-'+new Date().toISOString().slice(0,10)+'.json'
   a.click()
   showToast('已导出 📤')
+}
+
+function doExportCSV(){
+  const BOM='\uFEFF'
+  const hdr='日期,类型,原始金额,币种,汇率,RMB金额,备注,比赛,关联会员,费用类型\n'
+  const rows=store.transactions.sort((a,b)=>b.date.localeCompare(a.date)).map(t=>{
+    const c=store.competitions.find(x=>x.id===t.compId)
+    const mids=getTxMemberIds(t)
+    const names=mids.map(mid=>{const m=store.members.find(x=>x.id===mid);return m?m.name:''}).filter(Boolean).join(';')
+    const expType=t.expenseType||(mids.length>0?'personal':'public')
+    const isPublic=expType==='public'||(t.publicMemberIds&&t.publicMemberIds.length>0)
+    return [
+      t.date.slice(0,16),
+      t.type==='expense'?'支出':'收入',
+      (t.origAmount||t.amount).toFixed(2),
+      t.currency||'CNY',
+      t.rate||'',
+      t.amount.toFixed(2),
+      '"'+ (t.note||'').replace(/"/g,'""') +'"',
+      c?c.name:'',
+      names||'公共',
+      isPublic?'俱乐部':'个人'
+    ].join(',')
+  }).join('\n')
+  const csv=BOM+hdr+rows
+  const a=document.createElement('a')
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv)
+  a.download='saif-rowing-流水-'+new Date().toISOString().slice(0,10)+'.csv'
+  a.click()
+  showToast('已导出 Excel 📊')
 }
 
 async function doImport(ev){
