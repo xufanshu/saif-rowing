@@ -1,0 +1,950 @@
+{
+  "transactions": [
+    {
+      "id": "mpjv0tt4ehnf",
+      "type": "expense",
+      "amount": 4080,
+      "date": "2026-05-15T14:14",
+      "note": "680*6",
+      "compId": "mpjuz3k8clme",
+      "memberIds": [
+        "mem03",
+        "mem07",
+        "mpjupwltbynw"
+      ],
+      "origAmount": 4080,
+      "currency": "CNY",
+      "rate": 1,
+      "publicMemberIds": [
+        "mem01",
+        "mem02",
+        "mpjvj1c7i3g7"
+      ]
+    },
+    {
+      "id": "mpjvhyc2420b",
+      "type": "expense",
+      "amount": 277.6,
+      "origAmount": 277.6,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-05-22T14:28",
+      "note": "王佳旭报销 平湖比赛",
+      "compId": "mpjuz3k8clme",
+      "memberIds": [
+        "mem02"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpjviqh29dp8",
+      "type": "expense",
+      "amount": 1441,
+      "origAmount": 1441,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-05-16T14:28",
+      "note": "平湖住宿",
+      "compId": "mpjuz3k8clme",
+      "memberIds": [
+        "mem03"
+      ],
+      "publicMemberIds": [
+        "mem01",
+        "mem02",
+        "mem04",
+        "mpjvj1c7i3g7"
+      ]
+    },
+    {
+      "id": "mpjuiqrkl6ja",
+      "type": "income",
+      "amount": 1000,
+      "date": "2026-05-16T14:00",
+      "note": "李意缺勤赞助",
+      "compId": null,
+      "memberIds": [
+        "mem08"
+      ]
+    },
+    {
+      "id": "mpkueatb98sy",
+      "type": "expense",
+      "amount": 956,
+      "origAmount": 956,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-05-17T06:45",
+      "note": "午餐小上海",
+      "compId": "mpjuz3k8clme",
+      "memberIds": []
+    },
+    {
+      "id": "mpkuept8709w",
+      "type": "expense",
+      "amount": 146,
+      "origAmount": 146,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-05-17T06:45",
+      "note": "午餐咖啡外卖",
+      "compId": "mpjuz3k8clme",
+      "memberIds": []
+    },
+    {
+      "id": "mpkujs73afmt",
+      "type": "expense",
+      "amount": 1300,
+      "origAmount": 1300,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-03-15T06:49",
+      "note": "小大志秘书处会议",
+      "compId": null,
+      "memberIds": [],
+      "publicMemberIds": []
+    },
+    {
+      "id": "mpkup3qhwtpf",
+      "type": "income",
+      "amount": 300000,
+      "origAmount": 300000,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-01-30T06:53",
+      "note": "会长朋友赞助30w",
+      "compId": null,
+      "memberIds": []
+    },
+    {
+      "id": "mpkuqire7inw",
+      "type": "income",
+      "amount": 3609.81,
+      "origAmount": 3609.81,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-01-01T06:54",
+      "note": "上年结转余额",
+      "compId": null,
+      "memberIds": []
+    },
+    {
+      "id": "mpkv5ef5sae7",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:05",
+      "note": "会员注册",
+      "compId": "comp_bled_2026",
+      "memberIds": [
+        "mem01"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpkwixe79212",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:45",
+      "note": "会员注册",
+      "compId": "comp_bled_2026",
+      "memberIds": [
+        "mem02"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpkwjbbkjpo6",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:45",
+      "note": "会员注册",
+      "compId": "comp_bled_2026",
+      "memberIds": [
+        "mem03"
+      ]
+    },
+    {
+      "id": "mpkwjm8v2b9o",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:45",
+      "note": "",
+      "compId": null,
+      "memberIds": [
+        "mem04"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpkwk109ia2z",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:45",
+      "note": "会员注册",
+      "compId": "comp_bled_2026",
+      "memberIds": [
+        "mem05"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpkwke0ga1n6",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:46",
+      "note": "会员注册",
+      "compId": "comp_bled_2026",
+      "memberIds": [
+        "mem06"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpkwkxq6qnv6",
+      "type": "expense",
+      "amount": 117,
+      "origAmount": 15,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-17T07:46",
+      "note": "会员注册",
+      "compId": "comp_bled_2026",
+      "memberIds": [
+        "mem10"
+      ],
+      "expenseType": "public"
+    },
+    {
+      "id": "mpkxs1va3zl6",
+      "type": "expense",
+      "amount": 592.8,
+      "origAmount": 76,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T08:19",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "expenseType": "public",
+      "publicMemberIds": [
+        "mem12",
+        "mem13"
+      ]
+    },
+    {
+      "id": "mpkz2c1roa3s",
+      "type": "expense",
+      "amount": 1185.6,
+      "origAmount": 152,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T08:55",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem05",
+        "mem06",
+        "mem08",
+        "mem09"
+      ]
+    },
+    {
+      "id": "mpkzcfcyevif",
+      "type": "expense",
+      "amount": 1185.6,
+      "origAmount": 152,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T09:03",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem01",
+        "mem02",
+        "mem03",
+        "mem10"
+      ]
+    },
+    {
+      "id": "mpkzg7aev66p",
+      "type": "expense",
+      "amount": 1185.6,
+      "origAmount": 152,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T09:06",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem04",
+        "mem11",
+        "mem12",
+        "mem13"
+      ]
+    },
+    {
+      "id": "mpkzjcctzqll",
+      "type": "expense",
+      "amount": 296.4,
+      "origAmount": 38,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T09:09",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem08"
+      ]
+    }
+  ],
+  "competitions": [
+    {
+      "id": "comp_bled_2026",
+      "name": "BLED比赛",
+      "date": "2026-09-09",
+      "note": "2026年BLED赛事（9/9-9/12）",
+      "boatDetails": {
+        "双单1 MB 2-": {
+          "raceNum": "",
+          "result": "",
+          "raceTime": ""
+        },
+        "四双1 MB 4X": {
+          "raceNum": "",
+          "result": "",
+          "raceTime": ""
+        },
+        "四双2 MB 4X": {
+          "raceNum": 132
+        },
+        "四双3 MB 4X": {
+          "raceNum": 132
+        },
+        "单人 MB 1X": {
+          "raceNum": 208
+        },
+        "单人2 MB 1X": {
+          "raceNum": 208
+        },
+        "单人4 MB 1X": {
+          "raceNum": 208
+        },
+        "单人 WA 1X": {
+          "raceNum": 222
+        },
+        "四单 MB 4-": {
+          "raceNum": 225
+        },
+        "双双1 MB 2X": {
+          "raceNum": 322
+        },
+        "双双3 MB 2X": {
+          "raceNum": 322
+        },
+        "双双5 MB 2X": {
+          "raceNum": 322
+        },
+        "双双2 MB 2X": {
+          "raceNum": 322
+        },
+        "双双2 MA 2X": {
+          "raceNum": 402
+        },
+        "八单 MB 8+": {
+          "raceNum": 416
+        },
+        "双双 MIXB 2X": {
+          "raceNum": 520
+        }
+      }
+    },
+    {
+      "id": "mpjuz3k8clme",
+      "name": "平湖比赛",
+      "date": "2026-05-16",
+      "note": ""
+    }
+  ],
+  "members": [
+    {
+      "id": "mem01",
+      "name": "侯业旺",
+      "idNum": "1996/08/04",
+      "height": null,
+      "shoe": null,
+      "age": 29,
+      "fundType": "club"
+    },
+    {
+      "id": "mem02",
+      "name": "王佳旭",
+      "idNum": "1994/09/21",
+      "height": null,
+      "shoe": null,
+      "age": 31,
+      "fundType": "club"
+    },
+    {
+      "id": "mem03",
+      "name": "张学军",
+      "idNum": "1972/02/22",
+      "height": null,
+      "shoe": null,
+      "age": 54,
+      "fundType": "self"
+    },
+    {
+      "id": "mem04",
+      "name": "沈大宇",
+      "idNum": "1997/04/06",
+      "height": null,
+      "shoe": null,
+      "age": 29,
+      "fundType": "club"
+    },
+    {
+      "id": "mem05",
+      "name": "张文涛",
+      "idNum": "1993/01/06",
+      "height": null,
+      "shoe": null,
+      "age": 33,
+      "fundType": "club"
+    },
+    {
+      "id": "mem06",
+      "name": "张野",
+      "idNum": "1989/08/17",
+      "height": null,
+      "shoe": null,
+      "age": 36,
+      "fundType": "club"
+    },
+    {
+      "id": "mem07",
+      "name": "吴锡盛",
+      "idNum": "1986/04/01",
+      "height": null,
+      "shoe": null,
+      "age": 40,
+      "fundType": "self"
+    },
+    {
+      "id": "mem08",
+      "name": "李意",
+      "idNum": "1984/08/04",
+      "height": null,
+      "shoe": null,
+      "age": 41,
+      "fundType": "self"
+    },
+    {
+      "id": "mem09",
+      "name": "吕律扬",
+      "idNum": "1987/02/18",
+      "height": null,
+      "shoe": null,
+      "age": 39,
+      "fundType": "self"
+    },
+    {
+      "id": "mem10",
+      "name": "李一娇",
+      "idNum": "1996/06/08",
+      "height": null,
+      "shoe": null,
+      "age": 30,
+      "fundType": "club"
+    },
+    {
+      "id": "mem11",
+      "name": "朱云",
+      "idNum": "1986/11/13",
+      "height": null,
+      "shoe": null,
+      "age": 39,
+      "fundType": "self"
+    },
+    {
+      "id": "mem12",
+      "name": "金淼",
+      "idNum": "1979/10/31",
+      "height": null,
+      "shoe": null,
+      "age": 46,
+      "fundType": "self"
+    },
+    {
+      "id": "mem13",
+      "name": "刘瓛",
+      "idNum": "1990/02/02",
+      "height": null,
+      "shoe": null,
+      "age": 36,
+      "fundType": "self"
+    },
+    {
+      "id": "mem14",
+      "name": "徐铭孺",
+      "idNum": "1995/10/06",
+      "height": null,
+      "shoe": null,
+      "age": 30,
+      "fundType": "self"
+    },
+    {
+      "id": "mpjupwltbynw",
+      "name": "蒲建川",
+      "idNum": "",
+      "height": null,
+      "shoe": null,
+      "age": null,
+      "fundType": "self"
+    },
+    {
+      "id": "mpjvj1c7i3g7",
+      "name": "张世涵",
+      "idNum": "",
+      "height": null,
+      "shoe": null,
+      "age": null,
+      "fundType": "club"
+    }
+  ],
+  "registrations": [
+    {
+      "id": "reg_1_金淼",
+      "memberId": "mem12",
+      "compId": "comp_bled_2026",
+      "event": "双单1 MB 2-",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_2_刘瓛",
+      "memberId": "mem13",
+      "compId": "comp_bled_2026",
+      "event": "双单1 MB 2-",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_3_张野",
+      "memberId": "mem06",
+      "compId": "comp_bled_2026",
+      "event": "四双1 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_4_张文涛",
+      "memberId": "mem05",
+      "compId": "comp_bled_2026",
+      "event": "四双1 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_5_吕律扬",
+      "memberId": "mem09",
+      "compId": "comp_bled_2026",
+      "event": "四双1 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_6_李意",
+      "memberId": "mem08",
+      "compId": "comp_bled_2026",
+      "event": "四双1 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_7_李一娇",
+      "memberId": "mem10",
+      "compId": "comp_bled_2026",
+      "event": "四双2 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_8_王佳旭",
+      "memberId": "mem02",
+      "compId": "comp_bled_2026",
+      "event": "四双2 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_9_侯业旺",
+      "memberId": "mem01",
+      "compId": "comp_bled_2026",
+      "event": "四双2 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_10_张学军",
+      "memberId": "mem03",
+      "compId": "comp_bled_2026",
+      "event": "四双2 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_11_沈大宇",
+      "memberId": "mem04",
+      "compId": "comp_bled_2026",
+      "event": "四双3 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_12_金淼",
+      "memberId": "mem12",
+      "compId": "comp_bled_2026",
+      "event": "四双3 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_13_朱云",
+      "memberId": "mem11",
+      "compId": "comp_bled_2026",
+      "event": "四双3 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_14_刘瓛",
+      "memberId": "mem13",
+      "compId": "comp_bled_2026",
+      "event": "四双3 MB 4X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_15_李意",
+      "memberId": "mem08",
+      "compId": "comp_bled_2026",
+      "event": "单人 MB 1X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_16_吴锡盛",
+      "memberId": "mem07",
+      "compId": "comp_bled_2026",
+      "event": "单人2 MB 1X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_17_刘瓛",
+      "memberId": "mem13",
+      "compId": "comp_bled_2026",
+      "event": "单人4 MB 1X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_18_徐铭孺",
+      "memberId": "mem14",
+      "compId": "comp_bled_2026",
+      "event": "单人 WA 1X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_19_朱云",
+      "memberId": "mem11",
+      "compId": "comp_bled_2026",
+      "event": "四单 MB 4-",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_20_金淼",
+      "memberId": "mem12",
+      "compId": "comp_bled_2026",
+      "event": "四单 MB 4-",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_21_刘瓛",
+      "memberId": "mem13",
+      "compId": "comp_bled_2026",
+      "event": "四单 MB 4-",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_22_吕律扬",
+      "memberId": "mem09",
+      "compId": "comp_bled_2026",
+      "event": "四单 MB 4-",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_23_张学军",
+      "memberId": "mem03",
+      "compId": "comp_bled_2026",
+      "event": "双双1 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_24_侯业旺",
+      "memberId": "mem01",
+      "compId": "comp_bled_2026",
+      "event": "双双1 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_25_金淼",
+      "memberId": "mem12",
+      "compId": "comp_bled_2026",
+      "event": "双双3 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_26_沈大宇",
+      "memberId": "mem04",
+      "compId": "comp_bled_2026",
+      "event": "双双3 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_27_李意",
+      "memberId": "mem08",
+      "compId": "comp_bled_2026",
+      "event": "双双5 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_28_朱云",
+      "memberId": "mem11",
+      "compId": "comp_bled_2026",
+      "event": "双双5 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_29_吴锡盛",
+      "memberId": "mem07",
+      "compId": "comp_bled_2026",
+      "event": "双双2 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_30_王佳旭",
+      "memberId": "mem02",
+      "compId": "comp_bled_2026",
+      "event": "双双2 MB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_31_吕律扬",
+      "memberId": "mem09",
+      "compId": "comp_bled_2026",
+      "event": "双双2 MA 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_32_李一娇",
+      "memberId": "mem10",
+      "compId": "comp_bled_2026",
+      "event": "双双2 MA 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_33_张文涛",
+      "memberId": "mem05",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_34_李一娇",
+      "memberId": "mem10",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_35_王佳旭",
+      "memberId": "mem02",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_36_张野",
+      "memberId": "mem06",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_37_侯业旺",
+      "memberId": "mem01",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_38_沈大宇",
+      "memberId": "mem04",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_39_张学军",
+      "memberId": "mem03",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_40_吴锡盛",
+      "memberId": "mem07",
+      "compId": "comp_bled_2026",
+      "event": "八单 MB 8+",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_41_徐铭孺",
+      "memberId": "mem14",
+      "compId": "comp_bled_2026",
+      "event": "双双 MIXB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "reg_42_李意",
+      "memberId": "mem08",
+      "compId": "comp_bled_2026",
+      "event": "双双 MIXB 2X",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k87ayp",
+      "memberId": "mem01",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k87hsb",
+      "memberId": "mem02",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k8p51k",
+      "memberId": "mem03",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k87q0a",
+      "memberId": "mem07",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k8nisl",
+      "memberId": "mem08",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k8q2f3",
+      "memberId": "mem12",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjuz3k82rsl",
+      "memberId": "mpjupwltbynw",
+      "compId": "mpjuz3k8clme",
+      "event": "八单",
+      "feeType": "self",
+      "amount": 0
+    },
+    {
+      "id": "mpjvr4eyuklc",
+      "memberId": "mpjvj1c7i3g7",
+      "compId": "mpjuz3k8clme",
+      "boat": "八单",
+      "eventType": "八人单桨",
+      "event": "八单",
+      "feeType": "club",
+      "amount": 0
+    },
+    {
+      "id": "mpjvxzfcleip",
+      "memberId": "mem04",
+      "compId": "mpjuz3k8clme",
+      "boat": "",
+      "eventType": "其他",
+      "event": "其他",
+      "feeType": "club",
+      "amount": 0
+    }
+  ]
+}

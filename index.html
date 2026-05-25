@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache">
+<!-- v=fix-eur -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SAIF ROWING 账本</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+:root{--primary:#1a73e8;--primary-light:#e8f0fe;--danger:#ea4335;--success:#34a853;--warning:#fbbc04;--bg:#f5f5f5;--card:#fff;--text:#202124;--text2:#5f6368;--border:#dadce0;--radius:12px}
+body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh}
+.container{max-width:600px;margin:0 auto;padding:12px}
+.hidden{display:none!important}
+.header{background:var(--primary);color:#fff;padding:16px;text-align:center;font-size:18px;font-weight:600;position:sticky;top:0;z-index:10}
+.header small{font-size:13px;font-weight:400;opacity:.9}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card-title{font-size:14px;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border-radius:var(--radius);padding:14px;text-align:center}
+.stat .label{font-size:12px;color:var(--text2)}
+.stat .val{font-size:22px;font-weight:700;margin-top:4px}
+.stat .val.positive{color:var(--success)}
+.stat .val.negative{color:var(--danger)}
+.stat .val.balance{color:var(--primary)}
+.btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:500;transition:opacity .15s}
+.btn:active{opacity:.7}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-block{width:100%;padding:12px;font-size:16px}
+.btn-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:16px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.form-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;outline:none;transition:border .2s}
+.form-input:focus{border-color:var(--primary)}
+.form-select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;outline:none;background:#fff;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%235f6368'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:15px;outline:none;resize:vertical;min-height:60px;font-family:inherit}
+.type-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.type-toggle button{flex:1;padding:10px;border:none;font-size:15px;cursor:pointer;background:#fff;color:var(--text2);transition:all .15s}
+.type-toggle button.active{background:var(--primary);color:#fff}
+.type-toggle button.expense.active{background:var(--danger)}
+.type-toggle button.income.active{background:var(--success)}
+.list-item{display:flex;padding:12px 0;border-bottom:1px solid #f0f0f0;gap:12px;align-items:center}
+.list-item:last-child{border-bottom:none}
+.list-item .icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.list-item .icon.expense{background:#fce8e6;color:var(--danger)}
+.list-item .icon.income{background:#e6f4ea;color:var(--success)}
+.list-item .info{flex:1;min-width:0}
+.list-item .info .top{display:flex;justify-content:space-between;align-items:center}
+.list-item .info .note{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item .info .tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--primary-light);color:var(--primary)}
+.tag.warning{background:#fef7e0;color:#e37400}
+.tag.danger{background:#fce8e6;color:var(--danger)}
+.tag.success{background:#e6f4ea;color:var(--success)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);display:flex;box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:100;max-width:600px;margin:0 auto}
+.bottom-nav a{flex:1;text-align:center;padding:8px 4px;color:var(--text2);text-decoration:none;font-size:10px;transition:color .15s}
+.bottom-nav a.active{color:var(--primary)}
+.bottom-nav a .nav-icon{font-size:22px;display:block;margin-bottom:2px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal-overlay .modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:20px;animation:slideUp .2s}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-size:18px;margin-bottom:16px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:24px;color:var(--text2);cursor:pointer}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-header h3{margin:0}
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-bar input{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none}
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty .empty-icon{font-size:48px;margin-bottom:12px}
+.empty p{font-size:14px}
+.comp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.comp-name{font-size:16px;font-weight:600}
+.comp-date{font-size:12px;color:var(--text2)}
+.comp-stats{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0}
+.comp-stat{font-size:12px;color:var(--text2)}
+.comp-stat strong{color:var(--text)}
+.member-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px}
+.member-info div{color:var(--text2)}
+.member-info div strong{color:var(--text)}
+.fab{position:fixed;bottom:76px;right:16px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:28px;box-shadow:0 4px 12px rgba(26,115,232,.4);cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.fab:active{transform:scale(.9)}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:8px 6px;border-bottom:2px solid var(--border);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase}
+.data-table td{padding:8px 6px;border-bottom:1px solid #f0f0f0}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:var(--danger);color:#fff;font-size:10px;padding:0 5px;margin-left:4px}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.amnt{font-weight:600;font-size:14px}
+.amnt.expense{color:var(--danger)}
+.amnt.income{color:var(--success)}
+.tab-bar{display:flex;gap:0;margin-bottom:12px;background:var(--card);border-radius:var(--radius);overflow:hidden}
+.tab-bar button{flex:1;padding:10px;border:none;background:transparent;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;position:relative}
+.tab-bar button.active{color:var(--primary);font-weight:600}
+.tab-bar button.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--primary);border-radius:1px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.detail-item{padding:8px;background:#f8f9fa;border-radius:8px}
+.detail-item .label{font-size:11px;color:var(--text2)}
+.detail-item .value{font-size:14px;font-weight:500;margin-top:2px}
+.quick-actions{display:flex;gap:8px;margin-top:12px}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.loading{text-align:center;padding:60px 20px;color:var(--text2)}
+.loading .spin{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-badge{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.sync-badge.online{background:#34a853}
+.sync-badge.offline{background:#ea4335}
+</style>
+</head>
+<body>
+
+<div class="header" id="appHeader">
+  📊 SAIF ROWING 账本 <small id="headerBalance"></small>
+  <span id="syncStatus" style="position:absolute;right:16px;top:50%;transform:translateY(-50%)"></span>
+</div>
+
+<div id="loadingScreen" class="loading container" style="padding-top:100px">
+  <div class="spin"></div>
+  <p>正在加载数据…</p>
+</div>
+
+<!-- ====== PAGE: 首页 ====== -->
+<div id="page-home" class="page container hidden">
+  <div class="stats" id="homeStats"></div>
+  <div class="card">
+    <div class="card-title">
+      <span>最近出入</span>
+      <button class="btn btn-sm btn-outline" onclick="showPage('transactions')">查看全部 →</button>
+    </div>
+    <div id="recentList"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">
+      快捷操作
+      <button class="btn btn-sm btn-outline" onclick="doExport()">📤 导出</button>
+      <button class="btn btn-sm btn-outline" onclick="document.getElementById('importFile').click()">📥 导入</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="doImport(event)">
+    </div>
+    <div class="quick-actions">
+      <button class="btn btn-primary btn-block" onclick="openTransactionModal()">📝 记一笔</button>
+      <button class="btn btn-outline btn-block" onclick="openRegistrationModal('')">📋 报名</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">
+      <span>📦 自动备份</span>
+      <button class="btn btn-sm btn-outline" onclick="showBackups()">查看历史</button>
+    </div>
+    <div id="backupStatus" style="font-size:13px;color:var(--text2)">加载中…</div>
+  </div>
+</div>
+
+<!-- ====== PAGE: 交易列表 ====== -->
+<div id="page-transactions" class="page container hidden">
+  <div class="card">
+    <div class="card-title">筛选</div>
+    <div class="search-bar">
+      <input type="text" id="txFilter" placeholder="搜索备注…" oninput="renderTransactions()">
+      <select class="form-select" style="width:auto;flex-shrink:0" id="txTypeFilter" onchange="renderTransactions()">
+        <option value="all">全部</option>
+        <option value="expense">支出</option>
+        <option value="income">收入</option>
+      </select>
+      <select class="form-select" style="width:auto;flex-shrink:0" id="txCompFilter" onchange="renderTransactions()">
+        <option value="">全部比赛</option>
+      </select>
+    </div>
+  </div>
+  <div id="txList" class="card"></div>
+  <button class="fab" onclick="openTransactionModal()">+</button>
+</div>
+
+<!-- ====== PAGE: 比赛 ====== -->
+<div id="page-comps" class="page container hidden">
+  <div class="card">
+    <div id="compList"></div>
+  </div>
+  <button class="fab" onclick="openCompModal()">+</button>
+</div>
+
+<!-- ====== PAGE: 会员 ====== -->
+<div id="page-members" class="page container hidden">
+  <div class="search-bar">
+    <input type="text" id="memberSearch" placeholder="搜索会员姓名…" oninput="renderMembers()" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none">
+  </div>
+  <div id="memberList"></div>
+  <button class="fab" onclick="openMemberModal()">+</button>
+</div>
+
+<!-- ====== PAGE: 报表 ====== -->
+<div id="page-reports" class="page container hidden">
+  <div class="tab-bar" id="reportTabs">
+    <button class="active" onclick="switchReportTab('comp')">按比赛</button>
+    <button onclick="switchReportTab('member')">按会员</button>
+  </div>
+  <div id="reportContent"></div>
+</div>
+
+<!-- ====== PAGE: 报表比赛详情 ====== -->
+<div id="page-reportCompDetail" class="page container hidden">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <button class="btn btn-outline btn-sm" onclick="showPage('reports');renderReports()">← 返回报表</button>
+    <span style="font-size:16px;font-weight:600" id="reportCompDetailTitle"></span>
+  </div>
+  <div id="reportCompDetailContent"></div>
+</div>
+
+<!-- ====== BOTTOM NAV ====== -->
+<nav class="bottom-nav">
+  <a href="#" class="active" data-page="home" onclick="showPage('home')">
+    <span class="nav-icon">🏠</span>首页
+  </a>
+  <a href="#" data-page="transactions" onclick="showPage('transactions')">
+    <span class="nav-icon">📋</span>流水
+  </a>
+  <a href="#" data-page="comps" onclick="showPage('comps')">
+    <span class="nav-icon">🏆</span>比赛
+  </a>
+  <a href="#" data-page="members" onclick="showPage('members')">
+    <span class="nav-icon">👥</span>会员
+  </a>
+  <a href="#" data-page="reports" onclick="showPage('reports')">
+    <span class="nav-icon">📊</span>报表
+  </a>
+</nav>
+
+<!-- ====== MODALS ====== -->
+<div id="txModal" class="modal-overlay hidden" onclick="closeModal(event,'txModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="txModalTitle">记一笔</h3>
+      <button class="btn-icon" onclick="closeModal(null,'txModal')">✕</button>
+    </div>
+    <div class="type-toggle" id="txTypeToggle">
+      <button class="expense active" data-value="expense" onclick="setTxType('expense')">💸 支出</button>
+      <button class="income" data-value="income" onclick="setTxType('income')">💰 收入</button>
+    </div>
+    <div class="form-group">
+      <label>金额</label>
+      <div style="display:flex;gap:8px">
+        <input type="number" class="form-input" id="txAmount" placeholder="0.00" step="0.01" min="0" style="flex:1" onchange="updateTxRmbAmount()" oninput="updateTxRmbAmount()">
+        <select class="form-select" id="txCurrency" onchange="updateTxCurrency()" style="width:90px;flex-shrink:0">
+          <option value="CNY">¥ CNY</option>
+          <option value="USD">$ USD</option>
+          <option value="EUR">€ EUR</option>
+        </select>
+      </div>
+      <div id="txRmbRow" class="hidden" style="margin-top:4px;font-size:13px;color:var(--text2);display:flex;gap:8px;align-items:center">
+        <span>汇率</span>
+        <input type="number" class="form-input" id="txRate" value="7.20" step="0.01" style="width:80px" oninput="updateTxRmbAmount()">
+        <span>= <strong id="txRmbDisplay" style="color:var(--primary)">¥0.00</strong></span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>日期</label>
+      <input type="datetime-local" class="form-input" id="txDate">
+    </div>
+    <div class="form-group">
+      <label>关联比赛（可选）</label>
+      <select class="form-select" id="txComp" onchange="updateTxMemberCompChange()"><option value="">— 不关联 —</option></select>
+    </div>
+    <div class="form-group">
+      <label>费用类型</label>
+      <div class="type-toggle" id="txExpenseType">
+        <button class="active" data-value="public" onclick="setTxExpenseType('public')">👥 公共开支</button>
+        <button data-value="personal" onclick="setTxExpenseType('personal')">🙋 个人费用</button>
+      </div>
+    </div>
+    <div class="form-group" id="txMemberGroup">
+      <label>关联会员（可多选）</label>
+      <div id="txMembers" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div class="form-group">
+      <label>备注</label>
+      <textarea class="form-textarea" id="txNote" placeholder="备注信息…"></textarea>
+    </div>
+    <input type="hidden" id="txEditId" value="">
+    <button class="btn btn-primary btn-block" onclick="saveTransaction()">保存</button>
+  </div>
+</div>
+
+<div id="compModal" class="modal-overlay hidden" onclick="closeModal(event,'compModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="compModalTitle">新建比赛</h3>
+      <button class="btn-icon" onclick="closeModal(null,'compModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>比赛名称</label>
+      <input type="text" class="form-input" id="compName" placeholder="如：2026 南京公开赛">
+    </div>
+    <div class="form-group">
+      <label>日期</label>
+      <input type="date" class="form-input" id="compDate">
+    </div>
+    <div class="form-group">
+      <label>备注</label>
+      <textarea class="form-textarea" id="compNote" placeholder="比赛地点、说明等"></textarea>
+    </div>
+    <div class="form-group">
+      <label>参赛会员（勾选本次参赛的人）</label>
+      <div id="compMembers" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <input type="hidden" id="compEditId" value="">
+    <button class="btn btn-primary btn-block" onclick="saveComp()">保存</button>
+  </div>
+</div>
+
+<div id="compDetailModal" class="modal-overlay hidden" onclick="closeModal(event,'compDetailModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="compDetailTitle">比赛详情</h3>
+      <button class="btn-icon" onclick="closeModal(null,'compDetailModal')">✕</button>
+    </div>
+    <div id="compDetailContent"></div>
+  </div>
+</div>
+
+<div id="memberModal" class="modal-overlay hidden" onclick="closeModal(event,'memberModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="memberModalTitle">新建会员</h3>
+      <button class="btn-icon" onclick="closeModal(null,'memberModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>姓名 *</label>
+      <input type="text" class="form-input" id="memberName" placeholder="姓名">
+    </div>
+    <div class="form-group"><label>生日</label><input type="text" class="form-input" id="memberIdNum" placeholder="出生日期（如 1996/08/04）"></div>
+    <div class="form-group"><label>身高 (cm)</label><input type="number" class="form-input" id="memberHeight" placeholder="身高"></div>
+    <div class="form-group"><label>鞋码</label><input type="number" class="form-input" id="memberShoe" placeholder="鞋码"></div>
+    <div class="form-group"><label>年龄</label><input type="number" class="form-input" id="memberAge" placeholder="年龄"></div>
+    <div class="form-group"><label>会员类型</label>
+      <div class="type-toggle" id="fundTypeToggle">
+        <button class="active" data-value="self" onclick="setFundType('self')">🙋 自费</button>
+        <button data-value="club" onclick="setFundType('club')">🏢 公费</button>
+      </div>
+    </div>
+    <input type="hidden" id="memberEditId" value="">
+    <button class="btn btn-primary btn-block" onclick="saveMember()">保存</button>
+  </div>
+</div>
+
+<div id="memberDetailModal" class="modal-overlay hidden" onclick="closeModal(event,'memberDetailModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="memberDetailTitle">会员详情</h3>
+      <button class="btn-icon" onclick="closeModal(null,'memberDetailModal')">✕</button>
+    </div>
+    <div id="memberDetailContent"></div>
+  </div>
+</div>
+
+<div id="regModal" class="modal-overlay hidden" onclick="closeModal(event,'regModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>新建船 / 报名</h3>
+      <button class="btn-icon" onclick="closeModal(null,'regModal')">✕</button>
+    </div>
+    <div class="form-group"><label>比赛</label><select class="form-select" id="regComp"></select></div>
+    <div class="form-group">
+      <label>艇号/船名</label>
+      <input type="text" class="form-input" id="regBoat" placeholder="如：双单1、四双2、八单A组" style="font-weight:600">
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">同一条船的人填相同的船名</div>
+    </div>
+    <div class="form-group">
+      <label>项目类型</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <select class="form-select" id="regEvent" style="flex:1">
+          <option value="单人双桨">单人双桨</option>
+          <option value="双人双桨">双人双桨</option>
+          <option value="四人双桨">四人双桨</option>
+          <option value="八人单桨">八人单桨</option>
+          <option value="其他">其他</option>
+        </select>
+        <input type="text" class="form-input" id="regEventCustom" placeholder="自定义" style="flex:1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>选择人</label>
+      <div id="regMembersChecklist" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveRegistration()">✅ 保存</button>
+  </div>
+</div>
+
+<div id="boatMemberModal" class="modal-overlay hidden" onclick="closeModal(event,'boatMemberModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div id="boatMemberModalContent"></div>
+  </div>
+</div>
+
+<div id="boatDetailModal" class="modal-overlay hidden" onclick="closeModal(event,'boatDetailModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="boatDetailTitle">编辑船队信息</h3>
+      <button class="btn-icon" onclick="closeModal(null,'boatDetailModal')">✕</button>
+    </div>
+    <div class="form-group"><label>秩序号</label><input type="text" class="form-input" id="boatRaceNum" placeholder="如 A-01"></div>
+    <div class="form-group"><label>名次</label><input type="text" class="form-input" id="boatResult" placeholder="如 1st / 冠军"></div>
+    <div class="form-group"><label>成绩</label><input type="text" class="form-input" id="boatRaceTime" placeholder="如 7:32.5"></div>
+    <button class="btn btn-primary btn-block" id="boatDetailSaveBtn" style="margin-top:8px">💾 保存</button>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal-overlay hidden" onclick="closeModal(event,'confirmModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:360px;border-radius:16px">
+    <div style="text-align:center;padding:20px">
+      <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+      <h3 id="confirmTitle">确认？</h3>
+      <p id="confirmMsg" style="color:var(--text2);font-size:14px;margin:8px 0 20px"></p>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-block" onclick="closeModal(null,'confirmModal')">取消</button>
+        <button class="btn btn-danger btn-block" id="confirmBtn">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- Backup viewer modal -->
+<div id="backupModal" class="modal-overlay hidden" onclick="closeModal(event,'backupModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📦 备份历史</h3>
+      <button class="btn-icon" onclick="closeModal(null,'backupModal')">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">每次保存数据时自动备份，保留最近50份</div>
+    <div id="backupList" style="max-height:60vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<script>
+// ====== DATA STORE (Server-synced) ======
+// All data lives in data.json on the server. Phone and computer share the same data.
+
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+const API = '/api/data'
+
+let store = { transactions:[], competitions:[], members:[], registrations:[] }
+let saveTimer = null
+
+async function loadStore() {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+    const r = await fetch(API, {signal: controller.signal})
+    clearTimeout(timeout)
+    const d = await r.json()
+    store.transactions = d.transactions || []
+    store.competitions = d.competitions || []
+    store.members = d.members || []
+    store.registrations = d.registrations || []
+    setSyncStatus(true)
+  } catch(e) {
+    console.warn('Server unreachable', e)
+    setSyncStatus(false)
+  }
+}
+
+function scheduleSave(ms) {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(saveStoreToServer, ms||200)
+}
+
+async function saveStoreToServer() {
+  try {
+    await fetch(API, {
+      method: 'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(store)
+    })
+    setSyncStatus(true)
+  } catch(e) {
+    console.error('Save failed', e)
+    setSyncStatus(false)
+  }
+}
+
+function setSyncStatus(online) {
+  const el = document.getElementById('syncStatus')
+  if (!el) return
+  el.innerHTML = `<span class="sync-badge ${online?'online':'offline'}"></span>`
+}
+
+// ====== PAGES ======
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'))
+  const page = document.getElementById('page-'+name)
+  if (page) page.classList.remove('hidden')
+  document.querySelectorAll('.bottom-nav a').forEach(a=>a.classList.toggle('active',a.dataset.page===name))
+  updateHeader()
+  if (name==='home') renderHome()
+  if (name==='transactions') renderTransactions()
+  if (name==='comps') renderComps()
+  if (name==='members') renderMembers()
+  if (name==='reports') renderReports()
+}
+
+// ====== MODALS ======
+function openModal(id){document.getElementById(id).classList.remove('hidden')}
+function closeModal(ev,id){if(ev&&ev.target!==ev.currentTarget)return;document.getElementById(id).classList.add('hidden')}
+
+// ====== CONFIRM ======
+function showConfirm(title,msg,cb){
+  document.getElementById('confirmTitle').textContent=title
+  document.getElementById('confirmMsg').textContent=msg
+  document.getElementById('confirmBtn').onclick=()=>{closeModal(null,'confirmModal');cb()}
+  openModal('confirmModal')
+}
+
+// ====== TOAST ======
+function showToast(msg){
+  const el=document.getElementById('toast')
+  el.textContent=msg;el.classList.add('show')
+  setTimeout(()=>el.classList.remove('show'),2500)
+}
+
+// ====== HEADER ======
+function updateHeader(){
+  const ie=calcIE();document.getElementById('headerBalance').textContent='余额 ¥'+ie.balance.toFixed(2)
+}
+
+// ====== HOME ======
+function calcIE(){
+  let inc=0,exp=0
+  store.transactions.forEach(t=>{if(t.type==='income')inc+=t.amount;else exp+=t.amount})
+  return {income:inc,expense:exp,balance:inc-exp}
+}
+
+function renderHome(){
+  const {income,expense,balance}=calcIE()
+  document.getElementById('homeStats').innerHTML=`
+    <div class="stat"><div class="label">总收入</div><div class="val positive">¥${income.toFixed(2)}</div></div>
+    <div class="stat"><div class="label">总支出</div><div class="val negative">¥${expense.toFixed(2)}</div></div>
+    <div class="stat"><div class="label">余额</div><div class="val balance">¥${balance.toFixed(2)}</div></div>
+    <div class="stat"><div class="label">笔数</div><div class="val">${store.transactions.length}</div></div>`
+  const recent=[...store.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5)
+  const el=document.getElementById('recentList')
+  if(recent.length===0) el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>还没有记录，点下面记一笔吧</p></div>'
+  else el.innerHTML=recent.map(t=>txHTML(t)).join('')
+}
+
+function txHTML(t){
+  const comp=store.competitions.find(c=>c.id===t.compId)
+  const mids=getTxMemberIds(t)
+  const members=mids.map(mid=>store.members.find(m=>m.id===mid)).filter(Boolean)
+  let tags=[]
+  if(comp) tags.push(`<span class="tag">🏆 ${comp.name}</span>`)
+  if(members.length>0) {
+    const pubSet=new Set(t.publicMemberIds||[])
+    members.forEach(m=>{
+      const isPub=pubSet.has(m.id)||t.expenseType==='public'
+      tags.push(`<span class="tag ${isPub?'success':''}">${isPub?'🏢':'👤'} ${m.name}${isPub?' (公共)':''}</span>`)
+    })
+  } else if(t.compId) tags.push(`<span class="tag success">👥 公共</span>`)
+  return `<div class="list-item">
+    <div class="icon ${t.type}">${t.type==='expense'?'💸':'💰'}</div>
+    <div class="info">
+      <div class="top">
+        <span class="amnt ${t.type}">${t.type==='expense'?'-':'+'}${getTxCurDisplay(t)}</span>
+        <span style="font-size:12px;color:var(--text2)">${fmtDate(t.date)}</span>
+      </div>
+      <div class="note">${t.note||'无备注'}${t.currency&&t.currency!=='CNY'?` <span style="color:var(--text2);font-size:11px">(≈¥${t.amount.toFixed(2)})</span>`:''}</div>
+      ${tags.length?'<div class="tags">'+tags.join('')+'</div>':''}
+    </div>
+    <button class="btn-icon" style="font-size:14px;color:var(--text2)" onclick="editTx('${t.id}')">✏️</button>
+    <button class="btn-icon" style="font-size:14px;color:var(--danger)" onclick="deleteTx('${t.id}')">🗑️</button>
+  </div>`
+}
+
+function fmtDate(iso){try{const d=new Date(iso);return d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return iso}}
+
+// ====== TRANSACTIONS ======
+function renderTransactions(){
+  const filter=document.getElementById('txFilter').value.toLowerCase()
+  const typeFilter=document.getElementById('txTypeFilter').value
+  const compFilter=document.getElementById('txCompFilter').value
+  const sel=document.getElementById('txCompFilter')
+  const cur=sel.value;sel.innerHTML='<option value="">全部比赛</option>'
+  store.competitions.forEach(c=>sel.innerHTML+=`<option value="${c.id}" ${c.id===cur?'selected':''}>${c.name}</option>`)
+  let list=[...store.transactions]
+  if(filter) list=list.filter(t=>(t.note||'').toLowerCase().includes(filter))
+  if(typeFilter!=='all') list=list.filter(t=>t.type===typeFilter)
+  if(compFilter) list=list.filter(t=>t.compId===compFilter)
+  list.sort((a,b)=>b.date.localeCompare(a.date))
+  const el=document.getElementById('txList')
+  if(list.length===0) el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>暂无记录</p></div>'
+  else {
+    const total=list.reduce((s,t)=>s+(t.type==='income'?t.amount:-t.amount),0)
+    el.innerHTML=`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-size:14px"><span>共 ${list.length} 笔</span><span class="amnt ${total>=0?'income':'expense'}">合计 ¥${total.toFixed(2)}</span></div>`+list.map(t=>txHTML(t)).join('')
+  }
+}
+
+// Currency helpers
+const DEFAULT_RATES = {CNY:1, USD:7.20, EUR:7.80}
+
+function updateTxCurrency(){
+  const cur=document.getElementById('txCurrency').value
+  const row=document.getElementById('txRmbRow')
+  if(cur==='CNY'){
+    row.classList.add('hidden')
+  } else {
+    row.classList.remove('hidden')
+    document.getElementById('txRate').value=DEFAULT_RATES[cur]||7.20
+    updateTxRmbAmount()
+  }
+}
+
+function updateTxRmbAmount(){
+  const cur=document.getElementById('txCurrency').value
+  if(cur==='CNY') return
+  const amount=parseFloat(document.getElementById('txAmount').value)||0
+  const rate=parseFloat(document.getElementById('txRate').value)||1
+  document.getElementById('txRmbDisplay').textContent='¥'+(amount*rate).toFixed(2)
+}
+
+function getTxCurDisplay(t){
+  if(!t.currency||t.currency==='CNY') return '¥'+t.amount.toFixed(2)
+  const sym={USD:'$',EUR:'€'}
+  return (sym[t.currency]||t.currency+' ')+t.origAmount.toFixed(2)
+}
+
+function setTxExpenseType(type, checkedIds){
+  document.querySelectorAll('#txExpenseType button').forEach(b=>b.classList.toggle('active',b.dataset.value===type))
+  const grp=document.getElementById('txMemberGroup')
+  grp.classList.remove('hidden')
+  // The global toggle only sets the DEFAULT for newly checked members.
+  // Already-checked members keep their individually-set type. Just re-render.
+  if(!checkedIds){
+    const el=document.getElementById('txMembers')
+    checkedIds=new Set()
+    el.querySelectorAll('input:checked').forEach(c=>checkedIds.add(c.value))
+  }
+  updateTxMemberOptions(null, checkedIds)
+  const label=document.querySelector('#txMemberGroup label')
+  if(label) label.textContent='关联会员（点击标签切换个人/公共）'
+}
+
+function updateTxMemberCompChange(){
+  // Preserve checked states that still exist in new comp
+  const curChecked=new Set([...document.querySelectorAll('#txMembers input:checked')].map(cb=>cb.value))
+  updateTxMemberOptions(null, curChecked)
+}
+
+function updateTxMemberOptions(compId, checkedIds){
+  if(compId===undefined||compId===null) compId=document.getElementById('txComp').value
+  const el=document.getElementById('txMembers')
+  const checked=(checkedIds||new Set())
+  // When editing existing members: show ALL (don't filter by comp)
+  // When creating new: only show members registered for this comp
+  let members=store.members
+  if(compId&&checked.size===0){
+    const regs=store.registrations.filter(r=>r.compId===compId)
+    const memIds=new Set(regs.map(r=>r.memberId))
+    members=store.members.filter(m=>memIds.has(m.id))
+  }
+  el.innerHTML=members.map(m=>{
+    const isChecked=checked.has(m.id)
+    const mType=txMemberTypes[m.id]||'personal'
+    const typeLabel=mType==='personal'?'🙋个人':'🏢公共'
+    const typeColor=mType==='personal'?'var(--danger)':'var(--success)'
+    return `<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;background:${isChecked?(mType==='personal'?'#fce8e6':'#e6f4ea'):'#fff'}" data-mid="${m.id}">
+      <input type="checkbox" value="${m.id}" ${isChecked?'checked':''} style="accent-color:var(--primary);flex-shrink:0">
+      <span style="flex:1">${m.name}</span>
+      ${isChecked?`<span onclick="event.stopPropagation();toggleOneMemberType('${m.id}')" style="font-size:10px;padding:2px 6px;border-radius:4px;background:${typeColor};color:#fff;cursor:pointer;flex-shrink:0">${typeLabel}</span>`:`<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#eee;color:#999;flex-shrink:0">个人</span>`}
+    </label>`
+  }).join('')
+  el.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange=()=>{
+      const mid=cb.value
+      if(cb.checked){
+        if(!txMemberTypes[mid]) txMemberTypes[mid]=document.querySelector('#txExpenseType button.active')?.dataset.value||'personal'
+      } else {
+        delete txMemberTypes[mid]
+      }
+      // Re-render to show/hide the type toggle
+      const checkedIds=new Set()
+      el.querySelectorAll('input:checked').forEach(c=>checkedIds.add(c.value))
+      updateTxMemberOptions(null, checkedIds)
+    }
+  })
+}
+
+function toggleOneMemberType(mid){
+  txMemberTypes[mid]=txMemberTypes[mid]==='public'?'personal':'public'
+  const el=document.getElementById('txMembers')
+  const checkedIds=new Set()
+  el.querySelectorAll('input:checked').forEach(c=>checkedIds.add(c.value))
+  updateTxMemberOptions(null, checkedIds)
+}
+
+function openTransactionModal(tx){
+  const now=new Date()
+  document.getElementById('txDate').value=now.toISOString().slice(0,16)
+  document.getElementById('txAmount').value='';document.getElementById('txNote').value='';document.getElementById('txEditId').value=''
+  document.getElementById('txModalTitle').textContent='记一笔'
+  document.getElementById('txCurrency').value='CNY'
+  document.getElementById('txRmbRow').classList.add('hidden')
+  const cs=document.getElementById('txComp');cs.innerHTML='<option value="">— 不关联 —</option>'
+  store.competitions.forEach(c=>cs.innerHTML+=`<option value="${c.id}">${c.name}</option>`)
+  if(tx){
+    document.getElementById('txModalTitle').textContent='编辑账单'
+    txMemberTypes={}
+    document.getElementById('txAmount').value=tx.origAmount||tx.amount
+    document.getElementById('txCurrency').value=tx.currency||'CNY'
+    if(tx.currency&&tx.currency!=='CNY'){
+      document.getElementById('txRate').value=tx.rate||DEFAULT_RATES[tx.currency]||7.20
+      updateTxCurrency()
+    }
+    document.getElementById('txDate').value=tx.date.slice(0,16)
+    document.getElementById('txNote').value=tx.note||''
+    document.getElementById('txEditId').value=tx.id
+    document.getElementById('txComp').value=tx.compId||''
+    setTxType(tx.type)
+    const mids=getTxMemberIds(tx)
+    const pubMids=new Set(tx.publicMemberIds||[])
+    txMemberTypes={}
+    mids.forEach(mid=>{txMemberTypes[mid]=pubMids.has(mid)?'public':'personal'})
+    setTxExpenseType(tx.expenseType||(mids.length>0?'personal':'public'), new Set(mids))
+  } else {
+    txMemberTypes={}
+    setTxType('expense')
+    setTxExpenseType('public', new Set())
+  }
+  openModal('txModal')
+}
+
+function setTxType(type){
+  document.querySelectorAll('#txTypeToggle button').forEach(b=>b.classList.toggle('active',b.dataset.value===type))
+}
+
+async function saveTransaction(){
+  const id=document.getElementById('txEditId').value
+  const type=document.querySelector('#txTypeToggle button.active')?.dataset.value||'expense'
+  const origAmount=parseFloat(document.getElementById('txAmount').value)
+  const currency=document.getElementById('txCurrency').value
+  const rate=currency==='CNY'?1:parseFloat(document.getElementById('txRate').value)||DEFAULT_RATES[currency]||1
+  const amount=currency==='CNY'?origAmount:origAmount*rate
+  const date=document.getElementById('txDate').value
+  const note=document.getElementById('txNote').value.trim()
+  const compId=document.getElementById('txComp').value||null
+  const expType=document.querySelector('#txExpenseType button.active')?.dataset.value||'public'
+  const allChecked=[...document.querySelectorAll('#txMembers input:checked')].map(cb=>cb.value)
+  const memberIds=allChecked.filter(mid=>(txMemberTypes[mid]||expType)==='personal')
+  const publicMemberIds=allChecked.filter(mid=>(txMemberTypes[mid]||expType)==='public')
+  if(!origAmount||origAmount<=0){alert('请输入有效金额');return}
+  if(!date){alert('请选择日期时间');return}
+  if(expType==='personal'&&memberIds.length===0&&publicMemberIds.length===0){alert('请至少选择一位关联会员');return}
+  const data={type,amount:Math.round(amount*100)/100,origAmount,currency,rate,date,note,compId,memberIds,publicMemberIds}
+  if(id){
+    const idx=store.transactions.findIndex(t=>t.id===id)
+    if(idx>=0) store.transactions[idx]={...store.transactions[idx],...data}
+  } else store.transactions.push({id:genId(),...data})
+  scheduleSave();closeModal(null,'txModal');renderCurrentPage()
+}
+
+function editTx(id){const tx=store.transactions.find(t=>t.id===id);if(tx)openTransactionModal(tx)}
+function deleteTx(id){showConfirm('删除账单','确定删除这笔记录吗？',()=>{store.transactions=store.transactions.filter(t=>t.id!==id);scheduleSave();renderCurrentPage()})}
+
+// ====== COMPETITIONS ======
+function renderComps(){
+  const el=document.getElementById('compList')
+  if(store.competitions.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><p>还没有比赛，点右下角新建</p></div>';return}
+  el.innerHTML=store.competitions.map(c=>{
+    const tx=store.transactions.filter(t=>t.compId===c.id)
+    const exp=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
+    const inc=tx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)
+    const regs=store.registrations.filter(r=>r.compId===c.id)
+    const mc=new Set(regs.map(r=>r.memberId)).size
+    const boatCount=new Set(regs.map(r=>r.event)).size
+    return `<div class="list-item" style="cursor:pointer" onclick="openCompDetail('${c.id}')">
+      <div class="icon" style="background:#e8f0fe;color:var(--primary)">🏆</div>
+      <div class="info"><div class="top"><span style="font-weight:600">${c.name}</span><span style="font-size:12px;color:var(--text2)">${fmtDateShort(c.date)}</span></div>
+      <div class="comp-stats"><span class="comp-stat">💰 <strong>¥${exp.toFixed(0)}</strong></span><span class="comp-stat">👥 <strong>${mc}</strong>人</span><span class="comp-stat">🚤 <strong>${boatCount}</strong>条船</span></div></div>
+      <button class="btn-icon" style="font-size:14px;color:var(--text2)" onclick="event.stopPropagation();editComp('${c.id}')">✏️</button>
+      <button class="btn-icon" style="font-size:14px;color:var(--danger)" onclick="event.stopPropagation();deleteComp('${c.id}')">🗑️</button>
+    </div>`
+  }).join('')
+}
+
+function fmtDateShort(iso){try{const d=new Date(iso);return d.toLocaleDateString('zh-CN')}catch(e){return iso}}
+
+function openCompModal(c){
+  document.getElementById('compName').value=c?c.name:''
+  document.getElementById('compDate').value=c?c.date:''
+  document.getElementById('compNote').value=c?(c.note||''):''
+  document.getElementById('compEditId').value=c?c.id:''
+  document.getElementById('compModalTitle').textContent=c?'编辑比赛':'新建比赛'
+  // Render member selection checkboxes
+  const regs=store.registrations.filter(r=>r.compId===(c?c.id:null))
+  const regMemberIds=new Set(regs.map(r=>r.memberId))
+  const el=document.getElementById('compMembers')
+  el.innerHTML=store.members.map(m=>
+    `<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;background:${regMemberIds.has(m.id)?'var(--primary-light)':'#fff'}">
+      <input type="checkbox" value="${m.id}" ${regMemberIds.has(m.id)?'checked':''} style="accent-color:var(--primary)">
+      ${m.name}
+    </label>`
+  ).join('')
+  // Highlight label on checkbox change
+  el.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange=()=>{cb.parentElement.style.background=cb.checked?'var(--primary-light)':'#fff'}
+  })
+  openModal('compModal')
+}
+function editComp(id){const c=store.competitions.find(x=>x.id===id);if(c)openCompModal(c)}
+
+async function syncCompMembers(compId, checkedIds){
+  // Auto-create/destroy registration records to match selected members
+  const existing=store.registrations.filter(r=>r.compId===compId)
+  const existingIds=new Set(existing.map(r=>r.memberId))
+  const newIds=new Set(checkedIds)
+  // Remove registrations for unchecked members
+  existing.forEach(r=>{if(!newIds.has(r.memberId)) store.registrations=store.registrations.filter(x=>x.id!==r.id)})
+  // Add registrations for newly checked members
+  newIds.forEach(mid=>{if(!existingIds.has(mid)) store.registrations.push({id:genId(),memberId:mid,compId,event:'参赛',feeType:'self',amount:0})})
+}
+
+async function saveComp(){
+  const name=document.getElementById('compName').value.trim()
+  const date=document.getElementById('compDate').value
+  const note=document.getElementById('compNote').value.trim()
+  const id=document.getElementById('compEditId').value
+  // Get checked members
+  const checkedIds=[...document.querySelectorAll('#compMembers input:checked')].map(cb=>cb.value)
+  if(!name){alert('请输入比赛名称');return}
+  if(!date){alert('请选择日期');return}
+  if(id){
+    const idx=store.competitions.findIndex(c=>c.id===id);if(idx>=0)store.competitions[idx]={...store.competitions[idx],name,date,note}
+    await syncCompMembers(id, checkedIds)
+  } else {
+    const newId=genId()
+    store.competitions.push({id:newId,name,date,note})
+    await syncCompMembers(newId, checkedIds)
+  }
+  scheduleSave();closeModal(null,'compModal');renderCurrentPage()
+}
+
+function deleteComp(id){showConfirm('删除比赛','删除后相关账单和报名信息不会被删除，但不再关联。确定？',()=>{store.competitions=store.competitions.filter(c=>c.id!==id);scheduleSave();renderCurrentPage()})}
+
+// ====== COMP DETAIL ======
+function openCompDetail(id){
+  const c=store.competitions.find(x=>x.id===id);if(!c)return
+  document.getElementById('compDetailTitle').textContent=c.name
+  const txList=store.transactions.filter(t=>t.compId===id)
+  const regs=store.registrations.filter(r=>r.compId===id)
+  const compExp=txList.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
+  const compInc=txList.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)
+  let html=`<div class="detail-grid" style="margin-bottom:12px">
+    <div class="detail-item"><div class="label">日期</div><div class="value">${fmtDateShort(c.date)}</div></div>
+    <div class="detail-item"><div class="label">总支出</div><div class="value" style="color:var(--danger)">¥${compExp.toFixed(2)}</div></div>
+    <div class="detail-item"><div class="label">总收入</div><div class="value" style="color:var(--success)">¥${compInc.toFixed(2)}</div></div>
+    <div class="detail-item"><div class="label">净花费</div><div class="value" style="color:${(compExp-compInc)>0?'var(--danger)':'var(--success)'}">¥${(compExp-compInc).toFixed(2)}</div></div>
+    <div class="detail-item" style="grid-column:1/-1"><div class="label">备注</div><div class="value">${c.note||'无'}</div></div></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn btn-primary btn-sm" onclick="closeModal(null,'compDetailModal');openRegistrationModal('${id}')">📝 报名</button>
+    <button class="btn btn-success btn-sm" onclick="closeModal(null,'compDetailModal');openTransactionModal(null)">💸 记账</button></div>`
+  // Member management section
+  if(regs.length>0){
+    // Calculate per-member expenses from transactions
+    const memberTx={}
+    const publicTx=[]
+    txList.forEach(t=>{
+      const personalMids=t.memberIds||(t.memberId?[t.memberId]:[])
+      const allMids=getTxMemberIds(t)
+      if(personalMids.length>0){
+        const share=t.amount/allMids.length
+        personalMids.forEach(mid=>{
+          if(!memberTx[mid]) memberTx[mid]=0
+          if(t.type==='expense') memberTx[mid]+=share
+          else memberTx[mid]-=share
+        })
+      } else {
+        publicTx.push(t)
+      }
+    })
+    // Group by boat
+    const byBoat={}
+    regs.forEach(r=>{
+      const boat=r.event||'未分组'
+      if(!byBoat[boat]) byBoat[boat]={members:[],totalExp:0}
+      byBoat[boat].members.push(r)
+    })
+    html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">🚤 参赛船队 (${Object.keys(byBoat).length}条船, ${regs.length}人)</h4>`
+    Object.entries(byBoat).forEach(([boatName, boat]) => {
+      const mCount=boat.members.length
+      const bd=c.boatDetails?c.boatDetails[boatName]||{}:{}
+      html+=`<div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-size:14px">🚤 ${boatName}</strong>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:12px;color:var(--text2)">${mCount}人</span>
+            <button class="btn btn-sm btn-primary" onclick="addToBoat('${c.id}','${boatName.replace(/'/g, "\\'")}')">＋加人</button>
+            <button class="btn btn-sm btn-outline" onclick="editBoatName('${c.id}','${boatName.replace(/'/g, "\\'")}')">✏️</button>
+          </span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--text2);align-items:center">` +
+          `<span style="background:#f0f0f0;padding:3px 8px;border-radius:4px">📋 #${bd.raceNum||'-'}</span>` +
+          `<span style="background:#fff3e0;padding:3px 8px;border-radius:4px">🥇 ${bd.result||'-'}</span>` +
+          `<span style="background:#e8f5e9;padding:3px 8px;border-radius:4px">⏱️ ${bd.raceTime||'-'}</span>` +
+          `<button class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:11px" onclick="editBoatDetail('${c.id}','${boatName.replace(/'/g, "\\'")}','${bd.raceNum||''}','${bd.result||''}','${bd.raceTime||''}')">✏️ 编辑</button>` +
+        `</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">`
+      boat.members.forEach(r=>{
+        const m=store.members.find(x=>x.id===r.memberId)
+        if(!m) return
+        const ft=(m.fundType||'self')==='self'?'🙋':'🏢'
+        html+=`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 8px;background:#f8f9fa;border-radius:6px;font-size:13px">
+          ${m.name}${ft}
+          <button style="background:none;border:none;cursor:pointer;font-size:12px;color:#999;padding:0 2px" onclick="deleteReg('${r.id}')">✕</button>
+        </span>`
+      })
+      html+=`</div></div>`
+    })
+    html+='</div>'
+    // Public expenses
+    const publicAmt=publicTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
+    if(publicAmt>0){
+      html+=`<div style="margin-top:8px"><h4 style="font-size:14px;margin-bottom:4px">👥 公共开支: ¥${publicAmt.toFixed(2)}</h4></div>`
+    }
+    // Total per-member
+    const memTotal=Object.values(memberTx).reduce((s,v)=>s+v,0)
+    html+=`<div style="margin-top:4px;font-size:13px;color:var(--text2)">个人支出合计: ¥${memTotal.toFixed(2)} | 公共开支: ¥${publicAmt.toFixed(2)}</div>`
+  } else html+=`<div class="empty" style="padding:20px"><p>暂无成员，在编辑比赛中勾选参赛会员</p></div>`
+  if(txList.length>0){
+    html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">💰 相关账单 (${txList.length})</h4>`
+    txList.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).forEach(t=>html+=txHTML(t))
+    html+='</div>'
+  }
+  document.getElementById('compDetailContent').innerHTML=html
+  openModal('compDetailModal')
+}
+
+// ====== MEMBERS ======
+function renderMembers(){
+  const search=(document.getElementById('memberSearch').value||'').toLowerCase()
+  let list=store.members;if(search)list=list.filter(m=>m.name.toLowerCase().includes(search))
+  const el=document.getElementById('memberList')
+  if(list.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>暂无会员</p></div>';return}
+  el.innerHTML=list.map(m=>{
+    const regs=store.registrations.filter(r=>r.memberId===m.id)
+    const txAmts=getMemberTxAmts(m.id)
+    const ft=m.fundType||'self'
+    let regSelfAmt=0, regClubAmt=0
+    if(ft==='club'){
+      regClubAmt=regs.reduce((s,r)=>s+r.amount,0)
+    } else {
+      regSelfAmt=regs.filter(r=>r.feeType==='self').reduce((s,r)=>s+r.amount,0)
+      regClubAmt=regs.filter(r=>r.feeType==='club').reduce((s,r)=>s+r.amount,0)
+    }
+    const totalOwe=txAmts.totalExpense+regSelfAmt
+    const totalPaid=txAmts.paid+regClubAmt
+    const typeTag=ft==='club'?'<span class="tag success">🏢 公费</span>':'<span class="tag warning">🙋 自费</span>'
+    return `<div class="list-item" style="cursor:pointer" onclick="openMemberDetail('${m.id}')">
+      <div class="icon" style="background:#e6f4ea;color:var(--success)">👤</div>
+      <div class="info"><div class="top"><span style="font-weight:600">${m.name}</span>${typeTag}<span style="font-size:12px;color:var(--text2)">${regs.length}次报名</span></div>
+      <div class="member-info"><div>生日: <strong>${m.idNum||'未填'}</strong></div><div>年龄: <strong>${m.age||'未填'}</strong></div><div>${ft==='club'?'🏢公费':'应收'}: <strong>${ft==='club'?'—':`<span style="color:${txAmts.balance>0?'var(--danger)':'var(--success)'}">¥${txAmts.balance.toFixed(0)}</span>`}</strong></div><div>已交: <strong style="color:var(--success)">¥${totalPaid.toFixed(0)}</strong></div></div></div>
+      <button class="btn-icon" style="font-size:14px;color:var(--text2)" onclick="event.stopPropagation();editMember('${m.id}')">✏️</button>
+      <button class="btn-icon" style="font-size:14px;color:var(--danger)" onclick="event.stopPropagation();deleteMember('${m.id}')">🗑️</button>
+    </div>`
+  }).join('')
+}
+
+function setFundType(type){
+  document.querySelectorAll('#fundTypeToggle button').forEach(b=>b.classList.toggle('active',b.dataset.value===type))
+}
+
+function openMemberModal(m){
+  document.getElementById('memberName').value=m?m.name:''
+  document.getElementById('memberIdNum').value=m?(m.idNum||''):''
+  document.getElementById('memberHeight').value=m?(m.height||''):''
+  document.getElementById('memberShoe').value=m?(m.shoe||''):''
+  document.getElementById('memberAge').value=m?(m.age||''):''
+  document.getElementById('memberEditId').value=m?m.id:''
+  document.getElementById('memberModalTitle').textContent=m?'编辑会员':'新建会员'
+  setFundType((m&&m.fundType)||'self')
+  openModal('memberModal')
+}
+function editMember(id){const m=store.members.find(x=>x.id===id);if(m)openMemberModal(m)}
+
+async function saveMember(){
+  const name=document.getElementById('memberName').value.trim()
+  const idNum=document.getElementById('memberIdNum').value.trim()
+  const height=parseInt(document.getElementById('memberHeight').value)||null
+  const shoe=parseInt(document.getElementById('memberShoe').value)||null
+  const age=parseInt(document.getElementById('memberAge').value)||null
+  const fundType=document.querySelector('#fundTypeToggle button.active')?.dataset.value||'self'
+  const id=document.getElementById('memberEditId').value
+  if(!name){alert('请输入姓名');return}
+  if(id){const idx=store.members.findIndex(m=>m.id===id);if(idx>=0)store.members[idx]={...store.members[idx],name,idNum,height,shoe,age,fundType}}
+  else store.members.push({id:genId(),name,idNum,height,shoe,age,fundType})
+  scheduleSave();closeModal(null,'memberModal');renderCurrentPage()
+}
+
+function deleteMember(id){showConfirm('删除会员','删除后报名记录仍在，但会员信息丢失。确定？',()=>{store.members=store.members.filter(m=>m.id!==id);scheduleSave();renderCurrentPage()})}
+
+// ====== MEMBER DETAIL ======
+function collectFromMember(id, name, amount){
+  const amt=prompt(`收取 ${name} 的欠款 ¥${amount.toFixed(2)}，输入实收金额：`, amount.toFixed(2))
+  if(!amt||parseFloat(amt)<=0) return
+  const now=new Date()
+  store.transactions.push({
+    id:genId(),
+    type:'income',
+    amount:parseFloat(amt),
+    date:now.toISOString().slice(0,16),
+    note:name+' 交费',
+    compId:null,
+    memberIds:[id]
+  })
+  scheduleSave()
+  openMemberDetail(id)  // re-render
+  showToast('已记录收款 ¥'+amt+' ✅')
+}
+
+function openMemberDetail(id){
+  const m=store.members.find(x=>x.id===id);if(!m)return
+  document.getElementById('memberDetailTitle').textContent=m.name
+  const regs=store.registrations.filter(r=>r.memberId===id)
+  const txAmts=getMemberTxAmts(id)
+  const ft=m.fundType||'self'
+  let regOwe=0, regPaid=0
+  if(ft==='club'){
+    regPaid=regs.reduce((s,r)=>s+r.amount,0)
+  } else {
+    regOwe=regs.filter(r=>r.feeType==='self').reduce((s,r)=>s+r.amount,0)
+    regPaid=regs.filter(r=>r.feeType==='club').reduce((s,r)=>s+r.amount,0)
+  }
+  const totalOwe=txAmts.owe+regOwe
+  const totalPaid=txAmts.paid+regPaid
+  const balance=totalOwe-totalPaid
+  
+  let html=`<div class="detail-grid" style="margin-bottom:12px">
+    <div class="detail-item"><div class="label">姓名</div><div class="value">${m.name} ${ft==='club'?'🏢公费':'🙋自费'}</div></div>
+    <div class="detail-item"><div class="label">年龄</div><div class="value">${m.age||'未填'}</div></div>
+    <div class="detail-item"><div class="label">身高</div><div class="value">${m.height?m.height+'cm':'未填'}</div></div>
+    <div class="detail-item"><div class="label">鞋码</div><div class="value">${m.shoe||'未填'}</div></div>
+    <div class="detail-item" style="grid-column:1/-1"><div class="label">生日</div><div class="value">${m.idNum||'未填'}</div></div></div>`
+  
+  // Balance card
+  if(ft==='club'){
+    html+=`<div style="border:2px solid var(--success);border-radius:var(--radius);padding:16px;margin-bottom:12px;text-align:center">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">🏢 公费会员</div>
+      <div style="font-size:28px;font-weight:700;color:var(--success)">俱乐部承担</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">个人支出 ¥${totalOwe.toFixed(2)} · 已缴 ¥${totalPaid.toFixed(2)}</div>
+    </div>`
+  } else {
+    html+=`<div style="border:2px solid ${balance>0?'var(--danger)':'var(--success)'};border-radius:var(--radius);padding:16px;margin-bottom:12px;text-align:center">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">${balance>0?'待收款':'已结清'}</div>
+      <div style="font-size:28px;font-weight:700;color:${balance>0?'var(--danger)':'var(--success)'}">¥${balance.toFixed(2)}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">应缴 ¥${totalOwe.toFixed(2)} · 已缴 ¥${totalPaid.toFixed(2)}</div>
+      ${balance>0?`<button class="btn btn-primary btn-block" style="margin-top:10px" onclick="collectFromMember('${id}','${m.name}',${balance})">📲 收款 ¥${balance.toFixed(2)}</button>`:''}
+    </div>`
+  }
+  
+  // Transaction-based expenses
+  const expenseTx=store.transactions.filter(t=>t.type==='expense'&&getTxMemberIds(t).includes(id))
+  const incomeTx=store.transactions.filter(t=>t.type==='income'&&getTxMemberIds(t).includes(id))
+  if(expenseTx.length>0||incomeTx.length>0){
+    html+=`<h4 style="font-size:14px;margin-bottom:8px">💰 流水明细（分摊后）</h4><div class="scroll-x"><table class="data-table"><tr><th>日期</th><th>说明</th><th>分摊</th></tr>`
+    ;[...expenseTx,...incomeTx].sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>{
+      const mids=getTxMemberIds(t)
+      const shareAmount=t.amount/mids.length
+      const totalDisplay=getTxCurDisplay(t)
+      const c=store.competitions.find(x=>x.id===t.compId)
+      const note=(c?c.name+' / ':'')+(t.note||'')
+      html+=`<tr><td>${fmtDate(t.date)}</td><td>${note}<br><span style="font-size:10px;color:var(--text2)">总额 ${totalDisplay} ÷ ${mids.length}人</span></td><td class="amnt ${t.type}">${t.type==='expense'?'-':'+'}¥${shareAmount.toFixed(2)}</td></tr>`
+    })
+    html+=`</table></div>`
+  }
+  if(regs.length>0){
+    html+=`<h4 style="font-size:14px;margin-bottom:8px">📋 报名记录</h4><div class="scroll-x"><table class="data-table"><tr><th>比赛</th><th>项目</th><th></th></tr>`
+    regs.forEach(r=>{const c=store.competitions.find(x=>x.id===r.compId);html+=`<tr><td>${c?c.name:'未知'}</td><td>${r.event}</td><td><button class="btn btn-sm btn-outline" onclick="deleteReg('${r.id}')">删除</button></td></tr>`})
+    html+=`</table></div>`
+  }
+  document.getElementById('memberDetailContent').innerHTML=html
+  openModal('memberDetailModal')
+}
+
+// ====== REGISTRATIONS ======
+function openRegistrationModal(compId, reg){
+  const cs=document.getElementById('regComp');cs.innerHTML=''
+  store.competitions.forEach(c=>cs.innerHTML+=`<option value="${c.id}" ${c.id===compId?'selected':''}>${c.name}</option>`)
+  document.getElementById('regEventCustom').value=reg?reg.eventType||'':''
+  document.getElementById('regBoat').value=reg?reg.boat||reg.event||'':''
+  // Member checklist (multi-select)
+  const el=document.getElementById('regMembersChecklist')
+  el.innerHTML=store.members.map(m=>
+    `<label style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;background:#fff">
+      <input type="checkbox" value="${m.id}" style="accent-color:var(--primary);width:18px;height:18px">
+      ${m.name}
+    </label>`
+  ).join('')
+  openModal('regModal')
+}
+
+async function saveRegistration(){
+  const compId=document.getElementById('regComp').value
+  const boat=document.getElementById('regBoat').value.trim()
+  const eventCustom=document.getElementById('regEventCustom').value.trim()
+  const eventSel=document.getElementById('regEvent').value
+  const eventType=eventCustom||eventSel
+  const event=boat||eventType
+  const memberIds=[...document.querySelectorAll('#regMembersChecklist input:checked')].map(cb=>cb.value)
+  if(!compId){alert('请选择比赛');return}
+  if(!memberIds.length){alert('请至少选一个人');return}
+  memberIds.forEach(memberId=>{
+    store.registrations.push({id:genId(),memberId,compId,eventType,event,amount:0})
+  })
+  scheduleSave();closeModal(null,'regModal');renderCurrentPage();showToast('报名成功 ✅')
+}
+
+function addToBoat(compId, boatName){
+  // Show simple member checklist - no fee, no event type, just pick people
+  const existing = new Set(store.registrations.filter(r=>r.compId===compId&&r.event===boatName).map(r=>r.memberId))
+  const html = `<div style="padding:10px">
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px">🚤 加入「${boatName}」</div>
+    <div id="boatMemberChecklist" style="display:flex;flex-wrap:wrap;gap:8px">
+      ${store.members.map(m=>
+        `<label style="display:flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;background:${existing.has(m.id)?'var(--primary-light)':'#fff'};flex:1;min-width:120px">
+          <input type="checkbox" value="${m.id}" style="accent-color:var(--primary);width:18px;height:18px">
+          ${m.name}
+        </label>`
+      ).join('')}
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="saveAddToBoat('${compId}','${boatName}')">✅ 加入选中会员</button>
+    <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal(null,'boatMemberModal')">取消</button>
+  </div>`
+  document.getElementById('boatMemberModalContent').innerHTML = html
+  openModal('boatMemberModal')
+}
+
+function saveAddToBoat(compId, boatName){
+  const checked = [...document.querySelectorAll('#boatMemberChecklist input:checked')].map(cb=>cb.value)
+  if(!checked.length){alert('请至少选一个人');return}
+  const existing = new Set(store.registrations.filter(r=>r.compId===compId&&r.event===boatName).map(r=>r.memberId))
+  checked.forEach(mid=>{
+    if(!existing.has(mid)){
+      store.registrations.push({id:genId(),memberId:mid,compId,event:boatName,feeType:'self',amount:0})
+    }
+  })
+  scheduleSave();closeModal(null,'boatMemberModal')
+  // Re-open comp detail to show updated list
+  openCompDetail(compId)
+}
+
+function editBoatName(compId, oldBoat){
+  const newName=prompt('修改船名：', oldBoat)
+  if(!newName||newName===oldBoat) return
+  store.registrations.forEach(r=>{
+    if(r.compId===compId&&r.event===oldBoat) r.event=newName
+  })
+  scheduleSave();renderCurrentPage();showToast('船名已更新 ✅')
+}
+
+function editBoatDetail(compId, boatName, raceNum, result, raceTime){
+  // Open a dedicated modal with all 3 fields at once
+  document.getElementById('boatDetailTitle').textContent='编辑 · '+boatName
+  document.getElementById('boatRaceNum').value=raceNum||''
+  document.getElementById('boatResult').value=result||''
+  document.getElementById('boatRaceTime').value=raceTime||''
+  document.getElementById('boatDetailSaveBtn').onclick=function(){
+    const num=document.getElementById('boatRaceNum').value.trim()
+    const res=document.getElementById('boatResult').value.trim()
+    const time=document.getElementById('boatRaceTime').value.trim()
+    const c=store.competitions.find(x=>x.id===compId)
+    if(!c) return
+    if(!c.boatDetails) c.boatDetails={}
+    c.boatDetails[boatName]={raceNum:num, result:res, raceTime:time}
+    scheduleSave()
+    closeModal(null,'boatDetailModal')
+    renderCurrentPage()
+  }
+  openModal('boatDetailModal')
+}
+
+function deleteReg(id){showConfirm('删除报名','确定删除这条报名记录吗？',()=>{store.registrations=store.registrations.filter(r=>r.id!==id);scheduleSave();renderCurrentPage()})}
+
+// ====== REPORTS ======
+let reportTab='comp'
+let txMemberTypes={} // per-member type: 'personal' or 'public'
+function switchReportTab(tab){
+  reportTab=tab
+  document.querySelectorAll('#reportTabs button').forEach(b=>b.classList.toggle('active',b.textContent.includes(tab==='comp'?'比赛':tab==='member'?'会员':'报名')))
+  renderReports()
+}
+
+function renderReports(){
+  const el=document.getElementById('reportContent')
+  if(reportTab==='comp') el.innerHTML=renderCompReport()
+  else if(reportTab==='member') el.innerHTML=renderMemberReport()
+}
+
+// Navigate to a full-page competition detail view (from report)
+function showReportCompDetail(id){
+  const c=store.competitions.find(x=>x.id===id);if(!c) return
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'))
+  document.getElementById('page-reportCompDetail').classList.remove('hidden')
+  document.querySelectorAll('.bottom-nav a').forEach(a=>a.classList.remove('active'))
+  renderReportCompDetail(id)
+  updateHeader()
+}
+
+function renderReportCompDetail(id){
+  const c=store.competitions.find(x=>x.id===id);if(!c)return
+  document.getElementById('reportCompDetailTitle').textContent='🏆 '+c.name
+  const txList=store.transactions.filter(t=>t.compId===id)
+  const regs=store.registrations.filter(r=>r.compId===id)
+  const compExp=txList.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
+  const compInc=txList.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)
+  let html=`<div class="detail-grid" style="margin-bottom:12px">
+    <div class="detail-item"><div class="label">日期</div><div class="value">${fmtDateShort(c.date)}</div></div>
+    <div class="detail-item"><div class="label">总支出</div><div class="value" style="color:var(--danger)">¥${compExp.toFixed(2)}</div></div>
+    <div class="detail-item"><div class="label">总收入</div><div class="value" style="color:var(--success)">¥${compInc.toFixed(2)}</div></div>
+    <div class="detail-item"><div class="label">净花费</div><div class="value" style="color:${(compExp-compInc)>0?'var(--danger)':'var(--success)'}">¥${(compExp-compInc).toFixed(2)}</div></div>
+    <div class="detail-item" style="grid-column:1/-1"><div class="label">备注</div><div class="value">${c.note||'无'}</div></div></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn btn-primary btn-sm" onclick="openRegistrationModal('${id}')">📝 报名</button>
+    <button class="btn btn-success btn-sm" onclick="openTransactionModal(null)">💸 记账</button></div>`
+  if(regs.length>0){
+    const memberTx={}
+    const publicTx=[]
+    txList.forEach(t=>{
+      const personalMids=t.memberIds||(t.memberId?[t.memberId]:[])
+      const allMids=getTxMemberIds(t)
+      if(personalMids.length>0){
+        const share=t.amount/allMids.length
+        personalMids.forEach(mid=>{
+          if(!memberTx[mid]) memberTx[mid]=0
+          if(t.type==='expense') memberTx[mid]+=share
+          else memberTx[mid]-=share
+        })
+      } else { publicTx.push(t) }
+    })
+    const byBoat={} // reportCompDetail
+    regs.forEach(r=>{
+      const boat=r.event||'未分组'
+      if(!byBoat[boat]) byBoat[boat]={members:[],totalExp:0}
+      byBoat[boat].members.push(r)
+    })
+    html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">🚤 参赛船队 (${Object.keys(byBoat).length}条船, ${regs.length}人)</h4>`
+    Object.entries(byBoat).forEach(([boatName, boat]) => {
+      const mCount=boat.members.length
+      const bd=c.boatDetails?c.boatDetails[boatName]||{}:{}
+      html+=`<div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-size:14px">🚤 ${boatName}</strong>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:12px;color:var(--text2)">${mCount}人</span>
+            <button class="btn btn-sm btn-primary" onclick="addToBoat('${c.id}','${boatName.replace(/'/g, "\\'")}')">＋加人</button>
+            <button class="btn btn-sm btn-outline" onclick="editBoatName('${c.id}','${boatName.replace(/'/g, "\\'")}')">✏️</button>
+          </span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--text2);align-items:center">` +
+          `<span style="background:#f0f0f0;padding:3px 8px;border-radius:4px">📋 #${bd.raceNum||'-'}</span>` +
+          `<span style="background:#fff3e0;padding:3px 8px;border-radius:4px">🥇 ${bd.result||'-'}</span>` +
+          `<span style="background:#e8f5e9;padding:3px 8px;border-radius:4px">⏱️ ${bd.raceTime||'-'}</span>` +
+          `<button class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:11px" onclick="editBoatDetail('${c.id}','${boatName.replace(/'/g, "\\'")}','${bd.raceNum||''}','${bd.result||''}','${bd.raceTime||''}')">✏️ 编辑</button>` +
+        `</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">`
+      boat.members.forEach(r=>{
+        const m=store.members.find(x=>x.id===r.memberId)
+        if(!m) return
+        const ft=(m.fundType||'self')==='self'?'🙋':'🏢'
+        html+=`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 8px;background:#f8f9fa;border-radius:6px;font-size:13px">
+          ${m.name}${ft}
+          <button style="background:none;border:none;cursor:pointer;font-size:12px;color:#999;padding:0 2px" onclick="deleteReg('${r.id}')">✕</button>
+        </span>`
+      })
+      html+=`</div></div>`
+    })
+    html+='</div>'
+    const publicAmt=publicTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
+    if(publicAmt>0) html+=`<div style="margin-top:8px"><h4 style="font-size:14px;margin-bottom:4px">👥 公共开支: ¥${publicAmt.toFixed(2)}</h4></div>`
+    const memTotal=Object.values(memberTx).reduce((s,v)=>s+v,0)
+    html+=`<div style="margin-top:4px;font-size:13px;color:var(--text2)">个人支出合计: ¥${memTotal.toFixed(2)} | 公共开支: ¥${publicAmt.toFixed(2)}</div>`
+  } else html+=`<div class="empty" style="padding:20px"><p>暂无成员，在编辑比赛中勾选参赛会员</p></div>`
+  if(txList.length>0){
+    html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">💰 相关账单 (${txList.length})</h4>`
+    txList.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).forEach(t=>html+=txHTML(t))
+    html+='</div>'
+  }
+  document.getElementById('reportCompDetailContent').dataset.compId=id
+  document.getElementById('reportCompDetailContent').innerHTML=html
+}
+
+// Normalize: returns array of member IDs for a transaction (handles old single memberId and new array memberIds + publicMemberIds)
+function getTxMemberIds(t){
+  const personal=t.memberIds||(t.memberId?[t.memberId]:[])
+  const public_=t.publicMemberIds||[]
+  return [...new Set([...personal, ...public_])]
+}
+
+// Only count transactions where member is in memberIds (personal), skip publicMemberIds
+// But share is divided among ALL linked members (personal + public)
+function getMemberTxAmts(memberId){
+  const m=store.members.find(x=>x.id===memberId)
+  const isClub=m&&m.fundType==='club'
+  let totalExpense=0, incomeShare=0
+  store.transactions.forEach(t=>{
+    const allMids=getTxMemberIds(t)
+    if(!allMids.includes(memberId)) return
+    const share=t.amount/allMids.length
+    const personalMids=t.memberIds||(t.memberId?[t.memberId]:[])
+    if(t.type==='expense'){
+      if(personalMids.includes(memberId)) totalExpense+=share
+    } else if(t.type==='income') incomeShare+=share
+  })
+  return {
+    totalExpense,
+    owe: isClub?0:totalExpense,
+    paid: incomeShare,
+    balance: isClub?0:(totalExpense - incomeShare)
+  }
+}
+
+function getMemberFundAmts(regs,memId){
+  const m=store.members.find(x=>x.id===memId)
+  const ft=m?m.fundType||'self':'self'
+  if(ft==='club') return {selfAmt:0,clubAmt:regs.reduce((s,r)=>s+r.amount,0)}
+  return {
+    selfAmt:regs.filter(r=>r.feeType==='self').reduce((s,r)=>s+r.amount,0),
+    clubAmt:regs.filter(r=>r.feeType==='club').reduce((s,r)=>s+r.amount,0)
+  }
+}
+
+function renderCompReport(){
+  if(store.competitions.length===0) return '<div class="card"><div class="empty"><div class="empty-icon">🏆</div><p>还没有比赛</p></div></div>'
+  return store.competitions.map(function(c){
+    const tx=store.transactions.filter(function(t){return t.compId===c.id})
+    const regs=store.registrations.filter(function(r){return r.compId===c.id})
+    var exp=0; tx.forEach(function(t){if(t.type==='expense')exp+=t.amount})
+    const members=new Set(regs.map(function(r){return r.memberId})).size
+    return '<div class="list-item" style="cursor:pointer" onclick="showReportCompDetail(\'' + c.id + '\')">' +
+      '<div class="icon" style="background:#e8f0fe;color:var(--primary)">🏆</div>' +
+      '<div class="info"><div class="top"><span style="font-weight:600">' + c.name + '</span>' +
+      '<span class="amnt ' + (exp>0?'expense':'income') + '">¥' + exp.toFixed(2) + '</span></div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + fmtDateShort(c.date) +
+      ' · ' + members + '人参赛 · ' + tx.length + '笔费用</div></div></div>'
+  }).join('')
+}function renderMemberReport(){
+  if(store.members.length===0) return '<div class="card"><div class="empty"><div class="empty-icon">👥</div><p>还没有会员</p></div></div>'
+  let html='<div class="card"><div class="scroll-x"><table class="data-table"><tr><th>姓名</th><th>类型</th><th>个人支出</th><th>已交款</th><th>应收</th></tr>'
+  store.members.forEach(m=>{
+    const txAmts=getMemberTxAmts(m.id)
+    const ft=m.fundType||'self'
+    const isClub=ft==='club'
+    const expenseDisplay=isClub?'🏢 俱乐部承担':`<span style="color:var(--danger)">¥${txAmts.totalExpense.toFixed(2)}</span>`
+    const paidDisplay=isClub?'—':`¥${txAmts.paid.toFixed(2)}`
+    const bal=isClub||txAmts.balance<=0?'—':`<span style="color:var(--danger)">¥${txAmts.balance.toFixed(2)}</span>`
+    html+=`<tr><td><strong>${m.name}</strong></td><td>${isClub?'🏢公费':'🙋自费'}</td><td>${expenseDisplay}</td><td>${paidDisplay}</td><td>${bal}</td></tr>`
+  })
+  html+='</table></div></div>';return html
+}
+
+function renderMemberCompReport(){
+  const compIds=new Set([...store.registrations.map(r=>r.compId), ...store.transactions.map(t=>t.compId).filter(Boolean)])
+  if(compIds.size===0) return '<div class="card"><div class="empty"><div class="empty-icon">📋</div><p>暂无数据</p></div></div>'
+  return [...compIds].map(cid => {
+    const c=store.competitions.find(x=>x.id===cid)
+    const regs=store.registrations.filter(r=>r.compId===cid)
+    const txList=store.transactions.filter(t=>t.compId===cid)
+    const expTotal=txList.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
+    let html=`<div class="card"><div class="comp-header"><span class="comp-name">${c?c.name:'未知比赛'}</span>
+      <span style="font-size:13px">💰 ¥${expTotal.toFixed(0)}</span></div>`
+    // Transactions section
+    if(txList.length>0){
+      html+=`<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">💰 费用明细</div>
+      <div class="scroll-x"><table class="data-table"><tr><th>日期</th><th>说明</th><th>关联人</th><th>金额</th></tr>`
+      txList.sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>{
+        const mids=getTxMemberIds(t)
+        const names=mids.map(mid=>{const m=store.members.find(x=>x.id===mid);return m?m.name:'?'}).join(', ')
+        const note=t.note||'-'
+        const cur=getTxCurDisplay(t)
+        html+=`<tr><td>${fmtDate(t.date)}</td><td>${note}</td><td>${names||'公共'}</td><td class="amnt ${t.type}">${t.type==='expense'?'-':'+'}${cur}</td></tr>`
+      })
+      html+=`</table></div>`
+    }
+    // Registrations by boat
+    if(regs.length>0){
+      const byBoat={}
+      regs.forEach(r=>{
+        if(!byBoat[r.event]) byBoat[r.event]=[]
+        byBoat[r.event].push(r)
+      })
+      Object.entries(byBoat).forEach(([eventName, crew]) => {
+        html+=`<div style="margin-bottom:6px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">🚤 ${eventName} (${crew.length}人)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">`
+        crew.forEach(r=>{const m=store.members.find(x=>x.id===r.memberId);html+=`<span style="padding:4px 10px;background:#f0f0f0;border-radius:6px;font-size:12px">${m?m.name:'?'}</span>`})
+        html+=`</div></div>`
+      })
+    }
+    return html+'</div>'
+  }).join('')
+}
+
+// ====== EXPORT / IMPORT ======
+async function doExport(){
+  const a=document.createElement('a')
+  a.href='data:application/json,'+encodeURIComponent(JSON.stringify(store,null,2))
+  a.download='saif-rowing-'+new Date().toISOString().slice(0,10)+'.json'
+  a.click()
+  showToast('已导出 📤')
+}
+
+async function doImport(ev){
+  const file=ev.target.files[0];if(!file)return
+  const text=await file.text()
+  try{
+    const d=JSON.parse(text)
+    if(!d.transactions||!d.members){alert('格式无效，请选择正确的备份文件');return}
+    // Merge by replacing
+    store.transactions=d.transactions||[]
+    store.competitions=d.competitions||[]
+    store.members=d.members||[]
+    store.registrations=d.registrations||[]
+    await saveStoreToServer()
+    renderCurrentPage()
+    showToast('导入成功 ✅')
+  }catch(e){alert('文件解析失败: '+e.message)}
+  ev.target.value=''
+}
+
+// ====== RENDER CURRENT ======
+function renderCurrentPage(){
+  const visible=document.querySelector('.page:not(.hidden)')
+  if(visible){
+    const name=visible.id.replace('page-','')
+    if(name==='home') renderHome()
+    if(name==='transactions') renderTransactions()
+    if(name==='comps') renderComps()
+    if(name==='members') renderMembers()
+    if(name==='reports') renderReports()
+    if(name==='reportCompDetail'){
+      const cid=document.getElementById('reportCompDetailContent').dataset.compId
+      if(cid) renderReportCompDetail(cid)
+    }
+  }
+  updateHeader()
+}
+
+// ====== BACKUPS ======
+async function showBackups(){
+  const el=document.getElementById('backupList')
+  el.innerHTML='<div class="loading"><div class="spin"></div><p>加载备份列表…</p></div>'
+  openModal('backupModal')
+  try{
+    const r=await fetch('/api/backups')
+    const bks=await r.json()
+    if(bks.length===0){
+      el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><p>暂无备份</p></div>'
+      return
+    }
+    el.innerHTML=bks.map((b,i)=>`<div class="list-item" style="cursor:pointer" onclick="restoreBackup('${b.file}')">
+      <div class="icon" style="background:#e8f0fe;color:var(--primary)">📦</div>
+      <div class="info">
+        <div class="top">
+          <span style="font-weight:600">${b.time}</span>
+          <span style="font-size:12px;color:var(--text2)">${(b.size/1024).toFixed(1)}KB</span>
+        </div>
+        <div class="note">第${bks.length-i}号备份</div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();restoreBackup('${b.file}')">恢复</button>
+    </div>`).join('')
+  } catch(e){
+    el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>加载失败</p></div>'
+  }
+}
+
+async function restoreBackup(file){
+  showConfirm('恢复备份','将恢复到 '+file.replace('data_','').replace('.json','')+' 的状态，当前数据将被备份覆盖。确定？', async()=>{
+    try{
+      await fetch('/api/restore?file='+file, {method:'POST'})
+      await loadStore()
+      renderCurrentPage()
+      closeModal(null,'backupModal')
+      showToast('已恢复到 '+file+' ✅')
+    } catch(e){
+      alert('恢复失败: '+e.message)
+    }
+  })
+}
+
+async function loadBackupCount(){
+  try{
+    const r=await fetch('/api/backups')
+    const bks=await r.json()
+    document.getElementById('backupStatus').textContent=bks.length+' 份备份 · 每次保存自动生成'
+  } catch(e){
+    document.getElementById('backupStatus').textContent='服务器连接异常'
+  }
+}
+
+// ====== INIT ======
+(async function init(){
+  await loadStore()
+  document.getElementById('loadingScreen').classList.add('hidden')
+  document.getElementById('page-home').classList.remove('hidden')
+  renderHome()
+  updateHeader()
+  loadBackupCount()
+})()
+</script>
+</body>
+</html>
