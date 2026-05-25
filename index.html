@@ -122,6 +122,7 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
 <div id="loadingScreen" class="loading container" style="padding-top:100px">
   <div class="spin"></div>
   <p>正在加载数据…</p>
+  <p style="font-size:12px;color:var(--text2);margin-top:4px">首次加载可能需要30秒唤醒服务器</p>
 </div>
 
 <!-- ====== PAGE: 首页 ====== -->
@@ -449,7 +450,7 @@ let saveTimer = null
 async function loadStore() {
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000)
+    const timeout = setTimeout(() => controller.abort(), 60000)
     const r = await fetch(API, {signal: controller.signal})
     clearTimeout(timeout)
     const d = await r.json()
