@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(__file__)
 DATA_FILE = os.path.join(BASE_DIR, 'data.json')
 BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
 MAX_BACKUPS = 50  # keep last 50
-PORT = 3000
+PORT = int(os.environ.get('PORT', 3000))
 
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
