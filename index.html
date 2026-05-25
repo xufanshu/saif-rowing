@@ -931,7 +931,7 @@ function openCompDetail(id){
   } else html+=`<div class="empty" style="padding:20px"><p>暂无成员，在编辑比赛中勾选参赛会员</p></div>`
   if(txList.length>0){
     html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">💰 相关账单 (${txList.length})</h4>`
-    txList.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).forEach(t=>html+=txHTML(t))
+    txList.sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>html+=txHTML(t))
     html+='</div>'
   }
   document.getElementById('compDetailContent').innerHTML=html
@@ -1284,7 +1284,7 @@ function renderReportCompDetail(id){
   } else html+=`<div class="empty" style="padding:20px"><p>暂无成员，在编辑比赛中勾选参赛会员</p></div>`
   if(txList.length>0){
     html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">💰 相关账单 (${txList.length})</h4>`
-    txList.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).forEach(t=>html+=txHTML(t))
+    txList.sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>html+=txHTML(t))
     html+='</div>'
   }
   document.getElementById('reportCompDetailContent').dataset.compId=id
