@@ -83,20 +83,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
 
     def do_GET(self):
-        if self.path == '/api/data':
+        parsed = urlparse(self.path)
+        path = parsed.path
+        if path == '/api/data':
             self.send_json(load_data())
-        elif self.path == '/api/export':
+        elif path == '/api/export':
             self.send_response(200)
             self.send_cors()
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.send_header('Content-Disposition', 'attachment; filename="saif-rowing-backup.json"')
             self.end_headers()
             self.wfile.write(json.dumps(load_data(), ensure_ascii=False, indent=2).encode('utf-8'))
-        elif self.path == '/api/backups':
+        elif path == '/api/backups':
             self.send_json(list_backups())
-        elif self.path.startswith('/api/backup/'):
+        elif path.startswith('/api/backup/'):
             # GET /api/backup/data_20260524_220000.json
-            fname = self.path.replace('/api/backup/', '')
+            fname = path.replace('/api/backup/', '')
             fpath = os.path.join(BACKUP_DIR, fname)
             if os.path.exists(fpath):
                 self.send_response(200)
