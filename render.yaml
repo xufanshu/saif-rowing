@@ -2,6 +2,16 @@ services:
   - type: web
     name: saif-rowing
     env: python
-    buildCommand: ""
+    buildCommand: pip install -r requirements.txt
     startCommand: python server.py
     plan: free
+    envVars:
+      - fromDatabase:
+          name: saif-rowing-db
+          property: connectionString
+    healthCheckPath: /api/data
+
+databases:
+  - name: saif-rowing-db
+    plan: free
+    region: oregon
