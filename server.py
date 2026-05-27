@@ -18,7 +18,7 @@ FORCE_PG = os.environ.get('FORCE_PG', '') in ('1', 'true', 'yes')
 
 # 如果部署在 Render 上但没有 DATABASE_URL，从已知数据库信息自动填充
 from urllib.parse import quote
-AUTO_DB_URL = 'postgresql://saif_rowing_db_user:aOEbn3gXaG6tJXdr0URy497uS7OdIsnC@dpg-d8am76v7f7vs73d9uen0-a/saif_rowing_db'
+AUTO_DB_URL = 'postgresql://saif_rowing_db_user:aOEbn3gXaG6tJXdr0URy497uS7OdIsnC@dpg-d8am76v7f7vs73d9uen0-a.internal/saif_rowing_db'
 
 # 先看 DATABASE_URL 是否有效，有就用 PG
 USE_PG = bool(DATABASE_URL) or bool(RENDER)
