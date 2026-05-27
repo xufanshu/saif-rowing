@@ -5,7 +5,7 @@
 <meta name="viewport"
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="cache-control" content="no-cache">
-<!-- v=fix-eur -->
+<!-- v=fix-eur v2=localbackup -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SAIF ROWING 账本</title>
 <style>
@@ -110,6 +110,10 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
 .sync-badge{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 .sync-badge.online{background:#34a853}
 .sync-badge.offline{background:#ea4335}
+.sync-badge.local{background:#fbbc04}
+.sync-label{font-size:11px;color:var(--text2);margin-left:4px}
+.sync-label.offline{color:var(--danger)}
+.sync-label.local{color:#e37400}
 </style>
 </head>
 <body>
@@ -439,14 +443,43 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
 </div>
 
 <script>
-// ====== DATA STORE (Server-synced) ======
-// All data lives in data.json on the server. Phone and computer share the same data.
+// ====== DATA STORE (Server-synced + localStorage backup) ======
+// Data saves to the server AND to localStorage as backup.
+// If server is down, edits are preserved in localStorage and sync when server comes back.
 
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 const API = '/api/data'
+const LOCAL_KEY = 'saif_rowing_store'
 
 let store = { transactions:[], competitions:[], members:[], registrations:[] }
 let saveTimer = null
+
+/** Save current store to browser localStorage immediately */
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(store))
+  } catch(e) {
+    console.warn('localStorage save failed', e)
+  }
+}
+
+/** Load store from localStorage. Returns true if data was found. */
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY)
+    if (!raw) return false
+    const d = JSON.parse(raw)
+    if (!d || typeof d !== 'object') return false
+    store.transactions = d.transactions || []
+    store.competitions = d.competitions || []
+    store.members = d.members || []
+    store.registrations = d.registrations || []
+    return true
+  } catch(e) {
+    console.warn('localStorage load failed', e)
+    return false
+  }
+}
 
 async function loadStore() {
   try {
@@ -455,40 +488,115 @@ async function loadStore() {
     const r = await fetch(API, {signal: controller.signal})
     clearTimeout(timeout)
     const d = await r.json()
-    store.transactions = d.transactions || []
-    store.competitions = d.competitions || []
-    store.members = d.members || []
-    store.registrations = d.registrations || []
-    setSyncStatus(true)
+    const serverHasData = d.transactions && d.transactions.length > 0
+    if (serverHasData) {
+      store.transactions = d.transactions || []
+      store.competitions = d.competitions || []
+      store.members = d.members || []
+      store.registrations = d.registrations || []
+      saveToLocalStorage()
+      setSyncStatus('online')
+    } else {
+      // Server returned empty — might be cold start! Don't overwrite local data.
+      const hasLocal = loadFromLocalStorage()
+      if (hasLocal) {
+        setSyncStatus('local')
+        // Try pushing local data to server
+        setTimeout(() => saveStoreToServer(), 3000)
+      } else {
+        store = { transactions:[], competitions:[], members:[], registrations:[] }
+        setSyncStatus('online')
+      }
+    }
   } catch(e) {
-    console.warn('Server unreachable', e)
-    setSyncStatus(false)
+    console.warn('Server unreachable, trying localStorage...', e)
+    const restored = loadFromLocalStorage()
+    if (restored) {
+      setSyncStatus('local')
+      showToast('📦 服务器离线，已从本地缓存恢复数据')
+      // Auto-retry: push local data when server comes back
+      if (!window._localRetryTimer) {
+        window._localRetryTimer = setInterval(async () => {
+          try {
+            const r = await fetch(API, {method:'HEAD', signal: AbortSignal.timeout(5000)})
+            if (r.ok) {
+              clearInterval(window._localRetryTimer)
+              window._localRetryTimer = null
+              await saveStoreToServer()
+            }
+          } catch(e) {}
+        }, 15000)
+      }
+    } else {
+      setSyncStatus('offline')
+      showToast('⚠️ 无法连接服务器，且本地无缓存数据')
+    }
   }
 }
 
 function scheduleSave(ms) {
+  // Always save to localStorage immediately (no debounce — data safety > perf)
+  saveToLocalStorage()
+  // Debounce server save
   clearTimeout(saveTimer)
   saveTimer = setTimeout(saveStoreToServer, ms||200)
+  // Update sync indicator to show pending
+  updateSyncPending()
+}
+
+function updateSyncPending() {
+  const el = document.getElementById('syncStatus')
+  if (!el) return
+  // Only override if currently online — local/offline indicators keep their state
+  if (el.dataset.syncState === 'online') {
+    el.innerHTML = '<span class="sync-badge" style="background:#9aa0a6"></span><span class="sync-label">保存中…</span>'
+  }
 }
 
 async function saveStoreToServer() {
   try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60000)
     await fetch(API, {
       method: 'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(store)
+      body: JSON.stringify(store),
+      signal: controller.signal
     })
-    setSyncStatus(true)
+    clearTimeout(timeout)
+    setSyncStatus('online')
   } catch(e) {
     console.error('Save failed', e)
-    setSyncStatus(false)
+    setSyncStatus('local')
+    showToast('⚠️ 服务器同步失败，数据已保存在浏览器本地（不会丢失）')
   }
 }
 
-function setSyncStatus(online) {
+function setSyncStatus(state) {
   const el = document.getElementById('syncStatus')
   if (!el) return
-  el.innerHTML = `<span class="sync-badge ${online?'online':'offline'}"></span>`
+  el.dataset.syncState = state
+  if (state === 'online') {
+    el.innerHTML = '<span class="sync-badge online"></span><span class="sync-label">已同步</span>'
+  } else if (state === 'local') {
+    el.innerHTML = '<span class="sync-badge local"></span><span class="sync-label local">本地缓存</span> <a href="#" onclick="saveStoreToServer();return false" style="color:var(--primary);font-size:11px">重试同步</a>'
+    // Auto-retry every 30s while in local mode
+    if (!window._localRetryTimer) {
+      window._localRetryTimer = setInterval(async () => {
+        try {
+          const r = await fetch(API, {method:'HEAD', signal: AbortSignal.timeout(5000)})
+          if (r.ok) {
+            clearInterval(window._localRetryTimer)
+            window._localRetryTimer = null
+            await saveStoreToServer()
+            showToast('✅ 服务器已恢复，数据同步成功', 3000)
+          }
+        } catch(e) { /* still offline, wait */ }
+      }, 30000)
+    }
+  } else {
+    el.innerHTML = '<span class="sync-badge offline"></span><span class="sync-label offline">离线</span>'
+  }
 }
 
 // ====== PAGES ======
@@ -518,10 +626,10 @@ function showConfirm(title,msg,cb){
 }
 
 // ====== TOAST ======
-function showToast(msg){
+function showToast(msg, duration){
   const el=document.getElementById('toast')
   el.textContent=msg;el.classList.add('show')
-  setTimeout(()=>el.classList.remove('show'),2500)
+  setTimeout(()=>el.classList.remove('show'), duration||2500)
 }
 
 // ====== HEADER ======
