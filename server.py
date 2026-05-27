@@ -391,6 +391,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass  # quiet
 
 
+def migrate_json_to_pg():
+    """将 data.json 中的数据迁移到 PostgreSQL"""
+    if not os.path.exists(DATA_FILE):
+        return 0
+    with open(DATA_FILE) as f:
+        try:
+            json_data = json.load(f)
+        except:
+            return 0
+    tx = json_data.get('transactions', [])
+    if not tx:
+        return 0
+    pg_save_data(json_data)
+    return len(tx)
+
+
 if __name__ == '__main__':
     pg_ok = False
     if DATABASE_URL:
@@ -398,6 +414,16 @@ if __name__ == '__main__':
             init_db()
             data = load_data()
             tx_count = len(data.get('transactions', []))
+            # 如果 PG 是空的，尝试从 data.json 迁移
+            if tx_count == 0 and os.path.exists(DATA_FILE):
+                migrated = migrate_json_to_pg()
+                if migrated > 0:
+                    tx_count = migrated
+                    print(f"  📦 从 data.json 迁移了 {migrated} 条记录到 PostgreSQL")
+                else:
+                    # 重新加载迁移后的数据
+                    data = load_data()
+                    tx_count = len(data.get('transactions', []))
             pg_ok = True
             print(f"\n{'='*45}")
             print(f"  SAIF ROWING 账本 - 同步服务器")
