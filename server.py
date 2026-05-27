@@ -9,23 +9,27 @@ DATA_FILE = os.path.join(BASE_DIR, 'data.json')
 BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
 MAX_BACKUPS = 50
 PORT = int(os.environ.get('PORT', 3000))
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
+DATABASE_URL = os.environ.get('DATABASE_URL', '') or os.environ.get('POSTGRESQL_URL', '')
 
 # ── 存储后端选择 ──────────────────────────────
 # 在 Render 上必须用 PostgreSQL，否则数据会丢失
 RENDER = os.environ.get('RENDER', '')
 FORCE_PG = os.environ.get('FORCE_PG', '') in ('1', 'true', 'yes')
 
-# 先看 DATABASE_URL 是否有效，有就用 PG
-USE_PG = bool(DATABASE_URL)
+# 如果部署在 Render 上但没有 DATABASE_URL，从已知数据库信息自动填充
+from urllib.parse import quote
+AUTO_DB_URL = 'postgresql://saif_rowing_db_user:aOEbn3gXaG6tJXdr0URy497uS7OdIsnC@dpg-d8am76v7f7vs73d9uen0-a/saif_rowing_db'
 
-# 如果在 Render 上但没有 DATABASE_URL，强制要求配数据库
+# 先看 DATABASE_URL 是否有效，有就用 PG
+USE_PG = bool(DATABASE_URL) or bool(RENDER)
+
+# 如果在 Render 上但没有 DATABASE_URL，自动填充
 if RENDER and not DATABASE_URL:
-    print("\n" + "!"*55)
-    print("  SAIF ROWING 部署在 Render 上，但未检测到 PostgreSQL 数据库链接！")
-    print("  请在 Render Dashboard 手动关联数据库，或设置 DATABASE_URL 环境变量。")
-    print("  临时使用 JSON 文件模式（数据在实例重启后会丢失）")
-    print("!"*55 + "\n")
+    print("\n" + "="*55)
+    print("  Render 上未检测到 DATABASE_URL，自动使用已知数据库")
+    print("="*55)
+    DATABASE_URL = AUTO_DB_URL
+    USE_PG = True
 
 if USE_PG:
     import psycopg2
