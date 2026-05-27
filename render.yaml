@@ -6,12 +6,6 @@ services:
     startCommand: python server.py
     plan: free
     envVars:
-      - fromDatabase:
-          name: saif-rowing-db
-          property: connectionString
+      - key: DATABASE_URL
+        value: postgresql://saif_rowing_db_user:aOEbn3gXaG6tJXdr0URy497uS7OdIsnC@dpg-d8am76v7f7vs73d9uen0-a/saif_rowing_db
     healthCheckPath: /api/data
-
-databases:
-  - name: saif-rowing-db
-    plan: free
-    region: oregon
