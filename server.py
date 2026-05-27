@@ -15,11 +15,17 @@ DATABASE_URL = os.environ.get('DATABASE_URL', '')
 # 在 Render 上必须用 PostgreSQL，否则数据会丢失
 RENDER = os.environ.get('RENDER', '')
 FORCE_PG = os.environ.get('FORCE_PG', '') in ('1', 'true', 'yes')
-USE_PG = bool(DATABASE_URL) or bool(FORCE_PG) or bool(RENDER)
 
-if USE_PG and not DATABASE_URL:
-    print("\n⚠️  WARNING: USE_PG=True but DATABASE_URL is empty!")
-    print("   Check that the database is linked to this service in Render dashboard.\n")
+# 先看 DATABASE_URL 是否有效，有就用 PG
+USE_PG = bool(DATABASE_URL)
+
+# 如果在 Render 上但没有 DATABASE_URL，强制要求配数据库
+if RENDER and not DATABASE_URL:
+    print("\n" + "!"*55)
+    print("  SAIF ROWING 部署在 Render 上，但未检测到 PostgreSQL 数据库链接！")
+    print("  请在 Render Dashboard 手动关联数据库，或设置 DATABASE_URL 环境变量。")
+    print("  临时使用 JSON 文件模式（数据在实例重启后会丢失）")
+    print("!"*55 + "\n")
 
 if USE_PG:
     import psycopg2
@@ -302,13 +308,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         path = parsed.path
         if path == '/api/diagnostics':
             self.send_json({
-                'mode': 'postgresql' if USE_PG else 'json_file',
+                'mode': 'postgresql' if bool(DATABASE_URL) else 'json_file',
                 'hasDatabaseUrl': bool(DATABASE_URL),
-                'onRender': bool(RENDER),
-                'forcePg': FORCE_PG,
+                'onRender': bool(os.environ.get('RENDER', '')),
                 'transactionCount': len(load_data().get('transactions', [])),
                 'backupCount': len(list_backups()),
                 'serverTime': datetime.now().isoformat(),
+                'hint': '如果 mode=json_file, 请在 Render Dashboard 手动将数据库链接到 web service',
             })
         elif path == '/api/data':
             self.send_json(load_data())
@@ -387,39 +393,30 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     pg_ok = False
-    if USE_PG:
-        if not DATABASE_URL:
-            print("\n" + "!"*50)
-            print("  PostgreSQL mode enabled but DATABASE_URL is not set!")
-            print("  Falling back to JSON file mode (DATA WILL BE LOST ON RESTART)")
-            print("!"*50 + "\n")
-        else:
-            try:
-                init_db()
-                pg_ok = True
-            except Exception as e:
-                print(f"\n{'!'*50}")
-                print(f"  PostgreSQL 连接失败: {e}")
-                print(f"  降级到 JSON 文件模式（重启后数据可能丢失）")
-                print(f"{'!'*50}\n")
+    if DATABASE_URL:
+        try:
+            init_db()
+            data = load_data()
+            tx_count = len(data.get('transactions', []))
+            pg_ok = True
+            print(f"\n{'='*45}")
+            print(f"  SAIF ROWING 账本 - 同步服务器")
+            print(f"  📍 http://0.0.0.0:{PORT}")
+            print(f"  🗄️  存储: PostgreSQL ({tx_count} 条交易)")
+            print(f"  ✅ 数据跨重启持久化，永不丢失")
+            print(f"{'='*45}\n")
+        except Exception as e:
+            print(f"\n{'!'*50}")
+            print(f"  数据库连接失败: {e}")
+            print(f"{'!'*50}\n")
     
-    if pg_ok:
-        data = load_data()
-        tx_count = len(data.get('transactions', []))
-        print(f"\n{'='*45}")
-        print(f"  SAIF ROWING 账本 - 同步服务器")
-        print(f"  📍 http://0.0.0.0:{PORT}")
-        print(f"  🗄️  存储: PostgreSQL ({tx_count} 条交易)")
-        print(f"  ✅ 数据跨重启持久化，永不丢失")
-        print(f"{'='*45}\n")
-    else:
+    if not pg_ok:
         bk_count = len(list_backups())
         print(f"\n{'='*45}")
         print(f"  SAIF ROWING 账本 - 同步服务器")
         print(f"  📍 http://0.0.0.0:{PORT}")
-        print(f"  💾 存储: JSON 文件 (data.json)")
+        print(f"  💾 存储: data.json (JSON 文件模式)")
         print(f"  📦 自动备份: backups/ 目录 ({bk_count} 份)")
-        print(f"  ⚠️  实例重启后 data.json 可能丢失，建议启用 PostgreSQL")
         print(f"{'='*45}\n")
     server = http.server.HTTPServer(('0.0.0.0', PORT), Handler)
     server.serve_forever()
