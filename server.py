@@ -200,12 +200,14 @@ if USE_PG:
                 # ── registrations ──
                 cur.execute('DELETE FROM registrations')
                 for r in data.get('registrations', []):
+                    # Support both boatName and event fields for backwards compatibility
+                    boat = r.get('boatName', '') or r.get('boat', '') or r.get('event', '')
                     cur.execute('''
                         INSERT INTO registrations
                             (id, comp_id, member_id, boat_name, race_num, result, race_time, paid)
                         VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
                     ''', (r.get('id',''), r.get('compId',''), r.get('memberId',''),
-                          r.get('boatName',''), r.get('raceNum',''), r.get('result',''),
+                          boat, r.get('raceNum',''), r.get('result',''),
                           r.get('raceTime',''), r.get('paid',0)))
             conn.commit()
         except Exception:
