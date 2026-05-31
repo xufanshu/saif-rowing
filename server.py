@@ -361,6 +361,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _do_GET_impl(self):
         parsed = urlparse(self.path)
         path = parsed.path
+        query = parse_qs(parsed.query)
         if path == '/api/diagnostics':
             self.send_json({
                 'mode': 'postgresql' if USE_PG else 'json_file',
