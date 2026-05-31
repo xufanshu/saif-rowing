@@ -32,9 +32,14 @@ if RENDER and not DATABASE_URL:
     USE_PG = True
 
 if USE_PG:
-    import psycopg2
-    import psycopg2.extras
+    try:
+        import psycopg2
+        import psycopg2.extras
+    except ImportError as e:
+        print(f"  ⚠️  psycopg2 导入失败: {e}，回退到 JSON 文件模式")
+        USE_PG = False
 
+if USE_PG:
     def get_pg_conn():
         return psycopg2.connect(DATABASE_URL, sslmode='require')
 
@@ -308,11 +313,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
 
     def do_GET(self):
+        try:
+            self._do_GET_impl()
+        except Exception as e:
+            self.send_json({'error': str(e), 'hint': '服务器内部错误，请稍后重试'}, 500)
+
+    def _do_GET_impl(self):
         parsed = urlparse(self.path)
         path = parsed.path
         if path == '/api/diagnostics':
             self.send_json({
-                'mode': 'postgresql' if bool(DATABASE_URL) else 'json_file',
+                'mode': 'postgresql' if USE_PG else 'json_file',
                 'hasDatabaseUrl': bool(DATABASE_URL),
                 'onRender': bool(os.environ.get('RENDER', '')),
                 'transactionCount': len(load_data().get('transactions', [])),
@@ -350,6 +361,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        try:
+            self._do_POST_impl()
+        except Exception as e:
+            self.send_json({'error': str(e), 'hint': '服务器内部错误，请稍后重试'}, 500)
+
+    def _do_POST_impl(self):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)

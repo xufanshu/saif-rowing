@@ -317,6 +317,169 @@
       "publicMemberIds": [
         "mem08"
       ]
+    },
+    {
+      "id": "mpl7ylpdo4f0",
+      "type": "expense",
+      "amount": 296.4,
+      "origAmount": 38,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:05",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem07"
+      ]
+    },
+    {
+      "id": "mpl7z3hwux1r",
+      "type": "expense",
+      "amount": 296.4,
+      "origAmount": 38,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:05",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem13"
+      ]
+    },
+    {
+      "id": "mpl7zovp053l",
+      "type": "expense",
+      "amount": 1185.6,
+      "origAmount": 152,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:05",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem09",
+        "mem11",
+        "mem12",
+        "mem13"
+      ]
+    },
+    {
+      "id": "mpl80aq6tokp",
+      "type": "expense",
+      "amount": 592.8,
+      "origAmount": 76,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:06",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem01",
+        "mem03"
+      ]
+    },
+    {
+      "id": "mpl82kfcwfyh",
+      "type": "expense",
+      "amount": 592.8,
+      "origAmount": 76,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:08",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem04",
+        "mem12"
+      ]
+    },
+    {
+      "id": "mpl831s0o192",
+      "type": "expense",
+      "amount": 592.8,
+      "origAmount": 76,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:08",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem08",
+        "mem11"
+      ]
+    },
+    {
+      "id": "mpl83k6kqczz",
+      "type": "expense",
+      "amount": 592.8,
+      "origAmount": 76,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:09",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem02",
+        "mem07"
+      ]
+    },
+    {
+      "id": "mpl850a1eh7n",
+      "type": "expense",
+      "amount": 592.8,
+      "origAmount": 76,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:10",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem09",
+        "mem10"
+      ]
+    },
+    {
+      "id": "mpl85p6dr0d1",
+      "type": "expense",
+      "amount": 2371.2,
+      "origAmount": 304,
+      "currency": "EUR",
+      "rate": 7.8,
+      "date": "2026-05-25T13:10",
+      "note": "报名费",
+      "compId": "comp_bled_2026",
+      "memberIds": [],
+      "publicMemberIds": [
+        "mem01",
+        "mem02",
+        "mem03",
+        "mem04",
+        "mem05",
+        "mem06",
+        "mem07",
+        "mem10"
+      ]
+    },
+    {
+      "id": "mpl8bbwja1uy",
+      "type": "income",
+      "amount": 9900,
+      "origAmount": 9900,
+      "currency": "CNY",
+      "rate": 1,
+      "date": "2026-04-07T13:13",
+      "note": "百利纺织品退款",
+      "compId": null,
+      "memberIds": [],
+      "publicMemberIds": []
     }
   ],
   "competitions": [
@@ -327,12 +490,12 @@
       "note": "2026年BLED赛事（9/9-9/12）",
       "boatDetails": {
         "双单1 MB 2-": {
-          "raceNum": "",
+          "raceNum": "111",
           "result": "",
           "raceTime": ""
         },
         "四双1 MB 4X": {
-          "raceNum": "",
+          "raceNum": "132",
           "result": "",
           "raceTime": ""
         },

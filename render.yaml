@@ -7,5 +7,5 @@ services:
     plan: free
     envVars:
       - key: DATABASE_URL
-        value: postgresql://saif_rowing_db_user:aOEbn3gXaG6tJXdr0URy497uS7OdIsnC@dpg-d8am76v7f7vs73d9uen0-a/saif_rowing_db
+        value: postgresql://saif_rowing_db_user:aOEbn3gXaG6tJXdr0URy497uS7OdIsnC@dpg-d8am76v7f7vs73d9uen0-a.oregon-postgres.render.com/saif_rowing_db
     healthCheckPath: /api/data
