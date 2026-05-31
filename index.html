@@ -203,6 +203,51 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
 
 <!-- ====== PAGE: 报表 ====== -->
 <div id="page-reports" class="page container hidden">
+
+<!-- ====== PAGE: 预算 ====== -->
+<div id="page-budget" class="page container hidden">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <select class="form-select" id="budgetCompSelect" onchange="renderBudgetPage()" style="flex:1;font-size:16px;font-weight:600">
+      <option value="">选择比赛...</option>
+    </select>
+  </div>
+  
+  <!-- Summary cards -->
+  <div class="stats hidden" id="budgetSummary" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px">
+    <div class="stat"><div class="label">预算总额</div><div class="val" style="color:var(--primary)" id="budgetTotalPlanned">¥0</div></div>
+    <div class="stat"><div class="label">实际支出</div><div class="val" style="color:var(--danger)" id="budgetTotalActual">¥0</div></div>
+    <div class="stat"><div class="label">差额</div><div class="val" id="budgetTotalDiff">¥0</div></div>
+  </div>
+
+  <!-- Quick add form -->
+  <div class="card hidden" id="budgetAddCard" style="margin-bottom:12px">
+    <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
+      <select class="form-select" id="budgetAddCategory" style="flex:1;min-width:80px;font-size:13px;padding:8px">
+        <option value="出行">🚗 出行</option>
+        <option value="签证">🛂 签证</option>
+        <option value="住宿">🏨 住宿</option>
+        <option value="吃饭">🍽 吃饭</option>
+        <option value="报名">📝 报名</option>
+        <option value="租船桨">🚣 租船桨</option>
+        <option value="器材">🔧 器材</option>
+        <option value="其他">📦 其他</option>
+      </select>
+      <input class="form-input" id="budgetAddItem" placeholder="项目名称" style="flex:2;min-width:100px;font-size:13px;padding:8px">
+      <input class="form-input" type="number" step="1" id="budgetAddPlanned" placeholder="预算" style="flex:1;min-width:70px;font-size:13px;padding:8px">
+      <button class="btn btn-primary btn-sm" onclick="addBudgetItem()" style="white-space:nowrap">＋添加</button>
+    </div>
+  </div>
+
+  <!-- Budget table -->
+  <div class="card" id="budgetTableCard" style="padding:0;overflow:hidden">
+    <div id="budgetTableContent" style="padding:16px;text-align:center;color:var(--text2)">
+      <div style="font-size:48px;margin-bottom:8px">💰</div>
+      <p>选择一个比赛开始做预算</p>
+    </div>
+  </div>
+</div>
+
+<div id="page-reports" class="page container hidden">
   <div class="tab-bar" id="reportTabs">
     <button class="active" onclick="switchReportTab('comp')">按比赛</button>
     <button onclick="switchReportTab('member')">按会员</button>
@@ -232,6 +277,9 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
   </a>
   <a href="#" data-page="members" onclick="showPage('members')">
     <span class="nav-icon">👥</span>会员
+  </a>
+  <a href="#" data-page="budget" onclick="showPage('budget')">
+    <span class="nav-icon">💰</span>预算
   </a>
   <a href="#" data-page="reports" onclick="showPage('reports')">
     <span class="nav-icon">📊</span>报表
@@ -773,6 +821,7 @@ function showPage(name) {
   if (name==='comps') renderComps()
   if (name==='members') renderMembers()
   if (name==='reports') renderReports()
+  if (name==='budget') { _budgetCompId=null; renderBudgetPage() }
 }
 
 // ====== MODALS ======
@@ -1219,7 +1268,128 @@ function openCompDetail(id){
   openModal('compDetailModal')
 }
 
-// ====== BUDGET ======
+// ====== BUDGET PAGE ======
+let _budgetCompId = null
+
+function renderBudgetPage(compId) {
+  if (compId) _budgetCompId = compId
+  const selected = _budgetCompId || ''
+  
+  // Populate competition dropdown
+  const sel = document.getElementById('budgetCompSelect')
+  if (sel && sel.options.length <= 1) {
+    const current = sel.value
+    sel.innerHTML = '<option value="">选择比赛...</option>'
+    store.competitions.forEach(c => {
+      sel.innerHTML += `<option value="${c.id}" ${c.id===current?'selected':''}>${c.name} (${fmtDateShort(c.date)})</option>`
+    })
+  }
+  if (selected) sel.value = selected
+  
+  if (!selected) {
+    document.getElementById('budgetSummary').classList.add('hidden')
+    document.getElementById('budgetAddCard').classList.add('hidden')
+    document.getElementById('budgetTableContent').innerHTML = '<div style="font-size:48px;margin-bottom:8px">💰</div><p>选择一个比赛开始做预算</p>'
+    return
+  }
+  
+  document.getElementById('budgetSummary').classList.remove('hidden')
+  document.getElementById('budgetAddCard').classList.remove('hidden')
+  
+  const budgets = (store.budgets || []).filter(b => b.compId === selected)
+  const totalPlanned = budgets.reduce((s, b) => s + (b.planned || 0), 0)
+  const totalActual = budgets.reduce((s, b) => s + getBudgetActual(b), 0)
+  const totalDiff = totalPlanned - totalActual
+  
+  // Summary
+  document.getElementById('budgetTotalPlanned').textContent = '¥' + totalPlanned.toFixed(0)
+  document.getElementById('budgetTotalActual').textContent = totalActual > 0 ? '¥' + totalActual.toFixed(0) : '¥0'
+  const diffEl = document.getElementById('budgetTotalDiff')
+  diffEl.textContent = (totalDiff >= 0 ? '' : '-') + '¥' + Math.abs(totalDiff).toFixed(0)
+  diffEl.style.color = totalDiff > 0 ? 'var(--success)' : totalDiff < 0 ? 'var(--danger)' : 'var(--text)'
+  
+  // Table
+  let html = ''
+  if (budgets.length === 0) {
+    html = '<div style="text-align:center;padding:24px;color:var(--text2)"><p style="font-size:36px;margin-bottom:8px">📋</p><p>还没有预算项目，用上面的表单添加</p></div>'
+  } else {
+    // Group by category
+    const grouped = {}
+    budgets.forEach(b => { const cat = b.category || '其他'; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(b) })
+    const esc = s => String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;')
+    
+    html += '<div class="scroll-x"><table class="data-table" style="font-size:13px">'
+    html += '<tr><th>类别</th><th>项目</th><th style="text-align:right">预算</th><th style="text-align:right">实际</th><th style="text-align:right">差额</th><th style="width:60px"></th></tr>'
+    
+    Object.keys(grouped).sort().forEach(cat => {
+      const items = grouped[cat]
+      const catPlanned = items.reduce((s, b) => s + (b.planned || 0), 0)
+      const catActual = items.reduce((s, b) => s + getBudgetActual(b), 0)
+      const catDiff = catPlanned - catActual
+      
+      items.forEach((b, i) => {
+        const actual = getBudgetActual(b)
+        const diff = (b.planned || 0) - actual
+        const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--danger)' : 'var(--text2)'
+        
+        html += `<tr>
+          <td style="color:var(--text2);font-weight:600;font-size:12px">${i===0?cat:''}</td>
+          <td ondblclick="editBudgetInline('${esc(b.id)}')" style="cursor:pointer">
+            <strong>${esc(b.item||'未命名')}</strong>
+            ${b.note?`<div style="font-size:11px;color:var(--text2)">${esc(b.note)}</div>`:''}
+          </td>
+          <td style="text-align:right;font-weight:500">¥${(b.planned||0).toFixed(0)}</td>
+          <td style="text-align:right">${actual>0?'¥'+actual.toFixed(0):'<span style="color:var(--text2)">-</span>'}</td>
+          <td style="text-align:right;font-weight:600;color:${diffColor}">${(diff>=0?'':'−')}¥${Math.abs(diff).toFixed(0)}</td>
+          <td style="text-align:center">
+            <button style="background:none;border:none;font-size:12px;color:var(--primary);cursor:pointer" onclick="editBudgetItem('${esc(b.id)}')">✏️</button>
+            <button style="background:none;border:none;font-size:14px;color:var(--danger);cursor:pointer" onclick="deleteBudgetItem('${esc(b.id)}')">✕</button>
+          </td>
+        </tr>`
+      })
+      
+      // Category subtotal
+      html += `<tr style="background:#f8f9fa;font-size:12px;font-weight:600">
+        <td colspan="2" style="text-align:right;color:var(--text2)">${cat} 小计</td>
+        <td style="text-align:right">¥${catPlanned.toFixed(0)}</td>
+        <td style="text-align:right">${catActual>0?'¥'+catActual.toFixed(0):'-'}</td>
+        <td style="text-align:right;color:${catDiff>0?'var(--success)':'var(--danger)'}">${catDiff>=0?'':'−'}¥${Math.abs(catDiff).toFixed(0)}</td>
+        <td></td>
+      </tr>`
+    })
+    
+    // Grand total
+    html += `<tr style="font-weight:700;border-top:2px solid var(--text);background:#f0f0f0">
+      <td colspan="2" style="text-align:right">合计</td>
+      <td style="text-align:right">¥${totalPlanned.toFixed(0)}</td>
+      <td style="text-align:right">${totalActual>0?'¥'+totalActual.toFixed(0):'-'}</td>
+      <td style="text-align:right;color:${totalDiff>0?'var(--success)':'var(--danger)'}">${totalDiff>=0?'':'−'}¥${Math.abs(totalDiff).toFixed(0)}</td>
+      <td></td>
+    </tr>`
+    html += '</table></div>'
+  }
+  document.getElementById('budgetTableContent').innerHTML = html
+}
+
+function addBudgetItem() {
+  const compId = _budgetCompId || document.getElementById('budgetCompSelect').value
+  if (!compId) { alert('请先选择比赛'); return }
+  const category = document.getElementById('budgetAddCategory').value
+  const item = document.getElementById('budgetAddItem').value.trim()
+  const planned = parseFloat(document.getElementById('budgetAddPlanned').value) || 0
+  if (!item) { alert('请输入项目名称'); return }
+  
+  if (!store.budgets) store.budgets = []
+  const id = 'budget_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4)
+  store.budgets.push({ id, compId, category, item, planned, note: '' })
+  scheduleSave()
+  
+  // Clear form
+  document.getElementById('budgetAddItem').value = ''
+  document.getElementById('budgetAddPlanned').value = ''
+  renderBudgetPage()
+  showToast('✅ 已添加「' + item + '」预算 ¥' + planned.toFixed(0))
+}
 const BUDGET_CATEGORIES = ['出行', '签证', '住宿', '吃饭', '报名', '租船桨', '器材', '其他']
 
 /** Match budget items to actual transactions by category keywords */
@@ -1238,79 +1408,23 @@ function getBudgetActual(budgetItem) {
 function renderBudgetHTML(compId) {
   const budgets = (store.budgets || []).filter(b => b.compId === compId)
   const totalPlanned = budgets.reduce((s, b) => s + (b.planned || 0), 0)
+  const totalActual = budgets.reduce((s, b) => s + getBudgetActual(b), 0)
+  const totalDiff = totalPlanned - totalActual
   
-  // Escape for JS strings
-  const esc = s => String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;')
-  
-  let html = `<div style="margin-top:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <h4 style="font-size:14px;margin:0">📊 预算规划 (${budgets.length}项)</h4>
-      <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();showAddBudget('${compId}')">＋添加</button>
-    </div>`
-  
-  if (budgets.length === 0) {
-    html += `<div class="empty" style="padding:12px"><p style="font-size:13px">暂无预算，点击"添加"规划赛事开支</p></div>`
-  } else {
-    // Group by category
-    const grouped = {}
-    budgets.forEach(b => {
-      const cat = b.category || '其他'
-      if (!grouped[cat]) grouped[cat] = []
-      grouped[cat].push(b)
-    })
-    
-    html += `<div class="scroll-x" style="margin-bottom:8px;font-size:12px">
-      <table class="data-table" style="font-size:12px">
-        <tr><th>类别</th><th>项目</th><th style="text-align:right">预算</th><th style="text-align:right">实际</th><th style="text-align:right">差额</th><th></th></tr>`
-    
-    Object.keys(grouped).sort().forEach(cat => {
-      const items = grouped[cat]
-      const catPlanned = items.reduce((s, b) => s + (b.planned || 0), 0)
-      const catActual = items.reduce((s, b) => s + getBudgetActual(b), 0)
-      
-      items.forEach((b, i) => {
-        const actual = getBudgetActual(b)
-        const diff = (b.planned || 0) - actual
-        const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--danger)' : 'var(--text2)'
-        const diffSign = diff > 0 ? '' : ''
-        const rowStyle = i === 0 ? `border-top:2px solid var(--border)` : ''
-        
-        html += `<tr style="${rowStyle}">
-          <td style="color:var(--text2);font-weight:600">${i === 0 ? cat : ''}</td>
-          <td>
-            <span style="cursor:pointer" onclick="editBudgetItem('${esc(b.id)}')">${esc(b.item || '未命名')}</span>
-            ${b.note ? `<div style="font-size:10px;color:var(--text2)">${esc(b.note)}</div>` : ''}
-          </td>
-          <td style="text-align:right;font-weight:500">¥${(b.planned||0).toFixed(0)}</td>
-          <td style="text-align:right;color:${actual > 0 ? 'var(--text)' : 'var(--text2)'}">${actual > 0 ? '¥'+actual.toFixed(0) : '-'}</td>
-          <td style="text-align:right;font-weight:600;color:${diffColor}">${diffSign}¥${Math.abs(diff).toFixed(0)}</td>
-          <td><button class="btn btn-sm" style="background:none;border:none;font-size:14px;color:var(--danger);cursor:pointer;padding:0 4px" onclick="event.stopPropagation();deleteBudgetItem('${esc(b.id)}')">✕</button></td>
-        </tr>`
-      })
-      
-      // Category subtotal
-      html += `<tr style="background:#f8f9fa;font-weight:600">
-        <td colspan="2" style="text-align:right;color:var(--text2)">小计</td>
-        <td style="text-align:right">¥${catPlanned.toFixed(0)}</td>
-        <td style="text-align:right">${catActual > 0 ? '¥'+catActual.toFixed(0) : '-'}</td>
-        <td style="text-align:right;color:${(catPlanned-catActual)>0?'var(--success)':'var(--danger)'}">¥${Math.abs(catPlanned-catActual).toFixed(0)}</td>
-        <td></td>
-      </tr>`
-    })
-    
-    // Grand total
-    const totalActual = budgets.reduce((s, b) => s + getBudgetActual(b), 0)
-    const totalDiff = totalPlanned - totalActual
-    html += `<tr style="font-weight:700;border-top:2px solid var(--text)">
-      <td colspan="2" style="text-align:right">合计</td>
-      <td style="text-align:right">¥${totalPlanned.toFixed(0)}</td>
-      <td style="text-align:right">${totalActual > 0 ? '¥'+totalActual.toFixed(0) : '-'}</td>
-      <td style="text-align:right;color:${totalDiff>0?'var(--success)':'var(--danger)'}">¥${Math.abs(totalDiff).toFixed(0)}</td>
-      <td></td>
-    </tr>`
-    html += `</table></div>`
-  }
-  html += '</div>'
+  let html = `<div style="margin-top:12px;border:1px solid var(--border);border-radius:var(--radius);padding:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span style="font-weight:600">💰 预算</span>
+        ${budgets.length > 0 ? `
+          <span style="margin-left:8px;font-size:13px;color:var(--text2)">${budgets.length}项</span>
+          <span style="margin-left:4px;font-size:13px">预算 ¥${totalPlanned.toFixed(0)}</span>
+          <span style="margin-left:4px;font-size:13px;color:${totalDiff>=0?'var(--success)':'var(--danger)'}">差额 ¥${Math.abs(totalDiff).toFixed(0)}</span>
+        ` : '<span style="margin-left:8px;font-size:13px;color:var(--text2)">暂无</span>'}
+      </div>
+      <a href="#" onclick="closeModal(null,'compDetailModal');showPage('budget');_budgetCompId='${compId}';setTimeout(()=>renderBudgetPage(),100);return false" 
+         style="color:var(--primary);text-decoration:none;font-size:13px;font-weight:500">查看详情 →</a>
+    </div>
+  </div>`
   return html
 }
 
@@ -1363,7 +1477,12 @@ async function saveBudgetItem(compId, existingId) {
   
   scheduleSave()
   closeModal(null, 'genericModal')
-  openCompDetail(compId)  // refresh detail view
+  // Refresh whichever view is currently showing
+  if (document.getElementById('page-budget') && !document.getElementById('page-budget').classList.contains('hidden')) {
+    renderBudgetPage()
+  } else {
+    openCompDetail(compId)
+  }
   showToast('💾 预算已保存')
 }
 
@@ -1374,7 +1493,12 @@ function deleteBudgetItem(budgetId) {
     store.budgets = (store.budgets || []).filter(x => x.id !== budgetId)
     scheduleSave()
     closeModal(null, 'genericModal')
-    if (compId) openCompDetail(compId)
+    // Refresh whichever view is currently showing
+    if (document.getElementById('page-budget') && !document.getElementById('page-budget').classList.contains('hidden')) {
+      renderBudgetPage()
+    } else if (compId) {
+      openCompDetail(compId)
+    }
     showToast('已删除')
   })
 }
