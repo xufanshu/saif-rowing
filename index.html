@@ -120,7 +120,9 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
 
 <div class="header" id="appHeader">
   📊 SAIF ROWING 账本 <small id="headerBalance"></small>
-  <span id="syncStatus" style="position:absolute;right:16px;top:50%;transform:translateY(-50%)"></span>
+  <span id="syncStatus" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px">
+    <a href="#" id="syncBtn" onclick="forceSync();return false" title="手动同步" style="color:#fff;text-decoration:none;font-size:18px;opacity:0.8">🔄</a>
+  </span>
 </div>
 
 <div id="loadingScreen" class="loading container" style="padding-top:100px">
@@ -547,14 +549,35 @@ function scheduleSave(ms) {
 function updateSyncPending() {
   const el = document.getElementById('syncStatus')
   if (!el) return
+  const indicator = document.getElementById('syncIndicator')
   // Only override if currently online — local/offline indicators keep their state
   if (el.dataset.syncState === 'online') {
-    el.innerHTML = '<span class="sync-badge" style="background:#9aa0a6"></span><span class="sync-label">保存中…</span>'
+    if (indicator) {
+      indicator.innerHTML = '<span class="sync-badge" style="background:#9aa0a6"></span><span class="sync-label">保存中…</span>'
+    } else {
+      el.innerHTML = '<span id="syncIndicator"><span class="sync-badge" style="background:#9aa0a6"></span><span class="sync-label">保存中…</span></span><a href="#" id="syncBtn" onclick="forceSync();return false" title="手动同步" style="color:#fff;text-decoration:none;font-size:18px;opacity:0.8">🔄</a>'
+    }
   }
 }
 
 async function saveStoreToServer() {
   try {
+    // ⚡ 先拉取服务器最新数据，合并后再推送，防止覆盖其他设备的更新
+    try {
+      const r = await fetch(API, {signal: AbortSignal.timeout(15000)})
+      if (r.ok) {
+        const serverData = await r.json()
+        const serverHasData = serverData.transactions && serverData.transactions.length > 0
+        if (serverHasData) {
+          // 合并：本地的修改优先，服务器的补充条目加入
+          store = mergeStore(store, serverData)
+        }
+      }
+    } catch(e) {
+      // 拉取失败不影响保存，继续推送本地数据
+    }
+    
+    // 推送合并后的数据
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 60000)
     await fetch(API, {
@@ -576,10 +599,25 @@ function setSyncStatus(state) {
   const el = document.getElementById('syncStatus')
   if (!el) return
   el.dataset.syncState = state
+  // Keep the sync button, update only the status indicator
+  const indicator = document.getElementById('syncIndicator')
+  if (!indicator) {
+    // First render: create indicator + button
+    if (state === 'online') {
+      el.innerHTML = '<span id="syncIndicator"><span class="sync-badge online"></span><span class="sync-label">已同步</span></span><a href="#" id="syncBtn" onclick="forceSync();return false" title="手动同步" style="color:#fff;text-decoration:none;font-size:18px;opacity:0.8">🔄</a>'
+    } else if (state === 'local') {
+      el.innerHTML = '<span id="syncIndicator"><span class="sync-badge local"></span><span class="sync-label local">本地缓存</span> <a href="#" onclick="saveStoreToServer();return false" style="color:#fbbc04;font-size:11px">重试同步</a></span><a href="#" id="syncBtn" onclick="forceSync();return false" title="手动同步" style="color:#fff;text-decoration:none;font-size:18px;opacity:0.8">🔄</a>'
+    } else {
+      el.innerHTML = '<span id="syncIndicator"><span class="sync-badge offline"></span><span class="sync-label offline">离线</span></span><a href="#" id="syncBtn" onclick="forceSync();return false" title="手动同步" style="color:#fff;text-decoration:none;font-size:18px;opacity:0.8">🔄</a>'
+    }
+    return
+  }
+  
+  // Subsequent updates: only update the indicator
   if (state === 'online') {
-    el.innerHTML = '<span class="sync-badge online"></span><span class="sync-label">已同步</span>'
+    indicator.innerHTML = '<span class="sync-badge online"></span><span class="sync-label">已同步</span>'
   } else if (state === 'local') {
-    el.innerHTML = '<span class="sync-badge local"></span><span class="sync-label local">本地缓存</span> <a href="#" onclick="saveStoreToServer();return false" style="color:var(--primary);font-size:11px">重试同步</a>'
+    indicator.innerHTML = '<span class="sync-badge local"></span><span class="sync-label local">本地缓存</span> <a href="#" onclick="saveStoreToServer();return false" style="color:#fbbc04;font-size:11px">重试同步</a>'
     // Auto-retry every 30s while in local mode
     if (!window._localRetryTimer) {
       window._localRetryTimer = setInterval(async () => {
@@ -595,8 +633,122 @@ function setSyncStatus(state) {
       }, 30000)
     }
   } else {
-    el.innerHTML = '<span class="sync-badge offline"></span><span class="sync-label offline">离线</span>'
+    indicator.innerHTML = '<span class="sync-badge offline"></span><span class="sync-label offline">离线</span>'
   }
+}
+
+// ====== AUTO SYNC: 定时从服务器拉取新数据，解决多设备不同步问题 ======
+let _lastServerPull = 0
+let _pullTimer = null
+let _isPulling = false
+
+/** 从服务器拉取最新数据，智能合并到本地 store */
+async function pullFromServer(silent) {
+  if (_isPulling) return
+  _isPulling = true
+  try {
+    const r = await fetch(API, {signal: AbortSignal.timeout(30000)})
+    if (!r.ok) return
+    const serverData = await r.json()
+    const serverTxCount = serverData.transactions ? serverData.transactions.length : 0
+    if (serverTxCount === 0) return  // 服务器无数据，不需要合并
+    
+    // 智能合并：以服务器数据为基础，保留本地更新的条目
+    const merged = mergeStore(store, serverData)
+    const changes = countChanges(store, merged)
+    
+    if (changes > 0) {
+      store = merged
+      saveToLocalStorage()
+      renderCurrentPage()
+      if (!silent) showToast(`🔄 同步了 ${changes} 条新数据`, 2500)
+    }
+    
+    _lastServerPull = Date.now()
+    setSyncStatus('online')
+  } catch(e) {
+    // 静默失败，不影响用户操作
+    if (!silent) console.warn('pullFromServer failed:', e.message)
+  } finally {
+    _isPulling = false
+  }
+}
+
+/** 智能合并：新条目以服务器为准，本地独有的保留 */
+function mergeStore(local, server) {
+  const result = {
+    transactions: mergeArray(local.transactions, server.transactions),
+    competitions: mergeArray(local.competitions, server.competitions),
+    members: mergeArray(local.members, server.members),
+    registrations: mergeArray(local.registrations, server.registrations)
+  }
+  return result
+}
+
+function mergeArray(localArr, serverArr) {
+  const localMap = new Map(localArr.map(item => [item.id, item]))
+  const result = []
+  const seen = new Set()
+  
+  // 以服务器数据为基础
+  for (const s of serverArr) {
+    const local = localMap.get(s.id)
+    if (local) {
+      // 两边都有：本地数据可能更新（比如刚编辑过），保留本地的
+      result.push(local)
+    } else {
+      // 服务器有但本地没有：新数据，加入
+      result.push(s)
+    }
+    seen.add(s.id)
+  }
+  
+  // 本地独有的（新创建的还未同步到服务器的）：保留
+  for (const l of localArr) {
+    if (!seen.has(l.id)) {
+      result.push(l)
+    }
+  }
+  
+  return result
+}
+
+function countChanges(local, merged) {
+  const localTx = local.transactions ? local.transactions.length : 0
+  const mergedTx = merged.transactions ? merged.transactions.length : 0
+  const localMem = local.members ? local.members.length : 0
+  const mergedMem = merged.members ? merged.members.length : 0
+  const localComp = local.competitions ? local.competitions.length : 0
+  const mergedComp = merged.competitions ? merged.competitions.length : 0
+  const localReg = local.registrations ? local.registrations.length : 0
+  const mergedReg = merged.registrations ? merged.registrations.length : 0
+  return (mergedTx - localTx) + (mergedMem - localMem) + (mergedComp - localComp) + (mergedReg - localReg)
+}
+
+/** 启动定时轮询：每3分钟检查一次服务器 */
+function startPeriodicSync() {
+  if (_pullTimer) clearInterval(_pullTimer)
+  _pullTimer = setInterval(() => {
+    // 只在页面可见时同步，节省资源
+    if (!document.hidden) {
+      pullFromServer(true)  // silent mode
+    }
+  }, 180000)  // 3 minutes
+}
+
+/** 页面可见性变化时：用户切回标签页，立即同步 */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    pullFromServer(true)  // silent mode
+  }
+})
+
+/** 手动强制同步（按钮调用） */
+async function forceSync() {
+  const btn = document.getElementById('syncBtn')
+  if (btn) { btn.textContent = '⏳'; btn.style.opacity = '0.6' }
+  await pullFromServer(false)  // show toast
+  if (btn) { btn.textContent = '🔄'; btn.style.opacity = '1' }
 }
 
 // ====== PAGES ======
@@ -1647,6 +1799,7 @@ async function loadBackupCount(){
 // ====== INIT ======
 (async function init(){
   await loadStore()
+  startPeriodicSync()  // 启动每3分钟自动同步
   document.getElementById('loadingScreen').classList.add('hidden')
   document.getElementById('page-home').classList.remove('hidden')
   renderHome()
