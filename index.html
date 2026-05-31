@@ -500,6 +500,10 @@ async function loadStore() {
         ...r,
         event: r.boatName || r.event || ''  // normalize: always populate 'event' from boatName
       }))
+      store.members = (d.members || []).map(m => ({
+        ...m,
+        fundType: m.fundType || m.fund_type || 'self'  // normalize: always populate camelCase fundType
+      }))
       saveToLocalStorage()
       setSyncStatus('online')
     } else {

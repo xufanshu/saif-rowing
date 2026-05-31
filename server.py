@@ -76,7 +76,8 @@ if USE_PG:
                     CREATE TABLE IF NOT EXISTS members (
                         id TEXT PRIMARY KEY,
                         name TEXT NOT NULL DEFAULT '',
-                        note TEXT DEFAULT ''
+                        note TEXT DEFAULT '',
+                        fund_type TEXT DEFAULT ''self''
                     )
                 ''')
                 cur.execute('''
@@ -141,6 +142,7 @@ if USE_PG:
                 members = []
                 for row in cur.fetchall():
                     m = dict(row)
+                    m['fundType'] = m.pop('fund_type', 'self')  # camelCase for frontend
                     m = {k: v for k, v in m.items() if v is not None}
                     members.append(m)
 
@@ -194,9 +196,10 @@ if USE_PG:
                 # ── members ──
                 cur.execute('DELETE FROM members')
                 for m in data.get('members', []):
+                    ft = m.get('fundType', m.get('fund_type', 'self'))
                     cur.execute('''
-                        INSERT INTO members (id, name, note) VALUES (%s,%s,%s)
-                    ''', (m.get('id',''), m.get('name',''), m.get('note','')))
+                        INSERT INTO members (id, name, note, fund_type) VALUES (%s,%s,%s,%s)
+                    ''', (m.get('id',''), m.get('name',''), m.get('note',''), ft))
 
                 # ── registrations ──
                 cur.execute('DELETE FROM registrations')
