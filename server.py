@@ -151,6 +151,7 @@ if USE_PG:
                     r['compId'] = r.pop('comp_id', '')
                     r['memberId'] = r.pop('member_id', '')
                     r['boatName'] = r.pop('boat_name', '')
+                    r['event'] = r['boatName']  # frontend compatibility (frontend reads 'event')
                     r['raceNum'] = r.pop('race_num', '')
                     r['raceTime'] = r.pop('race_time', '')
                     r = {k: v for k, v in r.items() if v is not None}

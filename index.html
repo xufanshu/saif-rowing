@@ -496,7 +496,10 @@ async function loadStore() {
       store.transactions = d.transactions || []
       store.competitions = d.competitions || []
       store.members = d.members || []
-      store.registrations = d.registrations || []
+      store.registrations = (d.registrations || []).map(r => ({
+        ...r,
+        event: r.boatName || r.event || ''  // normalize: always populate 'event' from boatName
+      }))
       saveToLocalStorage()
       setSyncStatus('online')
     } else {
