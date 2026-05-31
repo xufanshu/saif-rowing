@@ -92,6 +92,21 @@ if USE_PG:
                         paid REAL DEFAULT 0
                     )
                 ''')
+                cur.execute('''
+                    CREATE TABLE IF NOT EXISTS budgets (
+                        id TEXT PRIMARY KEY,
+                        comp_id TEXT NOT NULL,
+                        category TEXT NOT NULL DEFAULT '',
+                        item TEXT NOT NULL DEFAULT '',
+                        planned REAL NOT NULL DEFAULT 0,
+                        note TEXT DEFAULT '',
+                        currency TEXT DEFAULT 'CNY',
+                        rate REAL DEFAULT 1
+                    )
+                ''')
+                cur.execute('''
+                    CREATE INDEX IF NOT EXISTS idx_budgets_comp ON budgets(comp_id)
+                ''')
             conn.commit()
         finally:
             conn.close()
@@ -158,9 +173,17 @@ if USE_PG:
                     r['raceTime'] = r.pop('race_time', '')
                     r = {k: v for k, v in r.items() if v is not None}
                     regs.append(r)
+
+                cur.execute('SELECT * FROM budgets ORDER BY comp_id, category')
+                budgets = []
+                for row in cur.fetchall():
+                    b = dict(row)
+                    b['compId'] = b.pop('comp_id', '')
+                    b = {k: v for k, v in b.items() if v is not None}
+                    budgets.append(b)
         finally:
             conn.close()
-        return {'transactions': txs, 'competitions': comps, 'members': members, 'registrations': regs}
+        return {'transactions': txs, 'competitions': comps, 'members': members, 'registrations': regs, 'budgets': budgets}
 
     def pg_save_data(data):
         conn = get_pg_conn()
@@ -213,6 +236,17 @@ if USE_PG:
                     ''', (r.get('id',''), r.get('compId',''), r.get('memberId',''),
                           boat, r.get('raceNum',''), r.get('result',''),
                           r.get('raceTime',''), r.get('paid',0)))
+
+                # ── budgets ──
+                cur.execute('DELETE FROM budgets')
+                for b in data.get('budgets', []):
+                    cur.execute('''
+                        INSERT INTO budgets (id, comp_id, category, item, planned, note, currency, rate)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                    ''', (b.get('id',''), b.get('compId',''), b.get('category',''),
+                          b.get('item',''), b.get('planned',0), b.get('note',''),
+                          b.get('currency','CNY'), b.get('rate',1)))
+
             conn.commit()
         except Exception:
             conn.rollback()
@@ -339,6 +373,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             })
         elif path == '/api/data':
             self.send_json(load_data())
+        elif path == '/api/budgets':
+            comp_id = query.get('compId', [None])[0]
+            if not comp_id:
+                self.send_json({'error': '缺少compId参数'}, 400)
+                return
+            all_budgets = load_data().get('budgets', [])
+            self.send_json([b for b in all_budgets if b.get('compId') == comp_id])
         elif path == '/api/export':
             self.send_response(200)
             self.send_cors()
@@ -410,6 +451,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 data = json.load(f)
             save_data(data)
             self.send_json({"ok": True, "message": f"已恢复到 {fname}"})
+        elif path == '/api/budgets':
+            content_len = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_len)
+            try:
+                budgets = json.loads(body)
+                # Merge: get current data, replace budgets for this compId
+                data = load_data()
+                comp_id = query.get('compId', [None])[0]
+                if not comp_id:
+                    self.send_json({"ok": False, "error": "缺少compId参数"}, 400)
+                    return
+                # Remove old budgets for this competition
+                data['budgets'] = [b for b in data.get('budgets', []) if b.get('compId') != comp_id]
+                # Add new budgets
+                for b in budgets:
+                    b['compId'] = comp_id
+                    if not b.get('id'):
+                        b['id'] = f"budget_{comp_id}_{b.get('category','')}_{b.get('item','')}".replace(' ', '_')
+                data['budgets'].extend(budgets)
+                save_data(data)
+                self.send_json({"ok": True, "message": f"已保存 {len(budgets)} 条预算"})
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, 400)
         else:
             self.send_response(404)
             self.end_headers()

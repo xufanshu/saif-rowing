@@ -454,7 +454,7 @@ function genId(){return Date.now().toString(36)+Math.random().toString(36).slice
 const API = '/api/data'
 const LOCAL_KEY = 'saif_rowing_store'
 
-let store = { transactions:[], competitions:[], members:[], registrations:[] }
+let store = { transactions:[], competitions:[], members:[], registrations:[], budgets:[] }
 let saveTimer = null
 
 /** Save current store to browser localStorage immediately */
@@ -477,6 +477,7 @@ function loadFromLocalStorage() {
     store.competitions = d.competitions || []
     store.members = d.members || []
     store.registrations = d.registrations || []
+    store.budgets = d.budgets || []
     return true
   } catch(e) {
     console.warn('localStorage load failed', e)
@@ -504,6 +505,7 @@ async function loadStore() {
         ...m,
         fundType: m.fundType || m.fund_type || 'self'  // normalize: always populate camelCase fundType
       }))
+      store.budgets = d.budgets || []
       saveToLocalStorage()
       setSyncStatus('online')
     } else {
@@ -514,7 +516,7 @@ async function loadStore() {
         // Try pushing local data to server
         setTimeout(() => saveStoreToServer(), 3000)
       } else {
-        store = { transactions:[], competitions:[], members:[], registrations:[] }
+        store = { transactions:[], competitions:[], members:[], registrations:[], budgets:[] }
         setSyncStatus('online')
       }
     }
@@ -1204,6 +1206,10 @@ function openCompDetail(id){
     const memTotal=Object.values(memberTx).reduce((s,v)=>s+v,0)
     html+=`<div style="margin-top:4px;font-size:13px;color:var(--text2)">个人支出合计: ¥${memTotal.toFixed(2)} | 公共开支: ¥${publicAmt.toFixed(2)}</div>`
   } else html+=`<div class="empty" style="padding:20px"><p>暂无成员，在编辑比赛中勾选参赛会员</p></div>`
+
+  // ── 预算规划 ──
+  html += renderBudgetHTML(id)
+
   if(txList.length>0){
     html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">💰 相关账单 (${txList.length})</h4>`
     txList.sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>html+=txHTML(t))
@@ -1211,6 +1217,178 @@ function openCompDetail(id){
   }
   document.getElementById('compDetailContent').innerHTML=html
   openModal('compDetailModal')
+}
+
+// ====== BUDGET ======
+const BUDGET_CATEGORIES = ['出行', '签证', '住宿', '吃饭', '报名', '租船桨', '器材', '其他']
+
+/** Match budget items to actual transactions by category keywords */
+function getBudgetActual(budgetItem) {
+  const txs = store.transactions.filter(t => t.compId === budgetItem.compId && t.type === 'expense')
+  // Simple matching: check if transaction note or expenseType mentions the budget item/category
+  const keywords = [budgetItem.item, budgetItem.category].filter(k => k)
+  if (keywords.length === 0) return 0
+  return txs.reduce((sum, t) => {
+    const note = (t.note || '').toLowerCase()
+    const match = keywords.some(kw => note.includes(kw.toLowerCase()))
+    return match ? sum + t.amount : sum
+  }, 0)
+}
+
+function renderBudgetHTML(compId) {
+  const budgets = (store.budgets || []).filter(b => b.compId === compId)
+  const totalPlanned = budgets.reduce((s, b) => s + (b.planned || 0), 0)
+  
+  // Escape for JS strings
+  const esc = s => String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;')
+  
+  let html = `<div style="margin-top:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h4 style="font-size:14px;margin:0">📊 预算规划 (${budgets.length}项)</h4>
+      <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();showAddBudget('${compId}')">＋添加</button>
+    </div>`
+  
+  if (budgets.length === 0) {
+    html += `<div class="empty" style="padding:12px"><p style="font-size:13px">暂无预算，点击"添加"规划赛事开支</p></div>`
+  } else {
+    // Group by category
+    const grouped = {}
+    budgets.forEach(b => {
+      const cat = b.category || '其他'
+      if (!grouped[cat]) grouped[cat] = []
+      grouped[cat].push(b)
+    })
+    
+    html += `<div class="scroll-x" style="margin-bottom:8px;font-size:12px">
+      <table class="data-table" style="font-size:12px">
+        <tr><th>类别</th><th>项目</th><th style="text-align:right">预算</th><th style="text-align:right">实际</th><th style="text-align:right">差额</th><th></th></tr>`
+    
+    Object.keys(grouped).sort().forEach(cat => {
+      const items = grouped[cat]
+      const catPlanned = items.reduce((s, b) => s + (b.planned || 0), 0)
+      const catActual = items.reduce((s, b) => s + getBudgetActual(b), 0)
+      
+      items.forEach((b, i) => {
+        const actual = getBudgetActual(b)
+        const diff = (b.planned || 0) - actual
+        const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--danger)' : 'var(--text2)'
+        const diffSign = diff > 0 ? '' : ''
+        const rowStyle = i === 0 ? `border-top:2px solid var(--border)` : ''
+        
+        html += `<tr style="${rowStyle}">
+          <td style="color:var(--text2);font-weight:600">${i === 0 ? cat : ''}</td>
+          <td>
+            <span style="cursor:pointer" onclick="editBudgetItem('${esc(b.id)}')">${esc(b.item || '未命名')}</span>
+            ${b.note ? `<div style="font-size:10px;color:var(--text2)">${esc(b.note)}</div>` : ''}
+          </td>
+          <td style="text-align:right;font-weight:500">¥${(b.planned||0).toFixed(0)}</td>
+          <td style="text-align:right;color:${actual > 0 ? 'var(--text)' : 'var(--text2)'}">${actual > 0 ? '¥'+actual.toFixed(0) : '-'}</td>
+          <td style="text-align:right;font-weight:600;color:${diffColor}">${diffSign}¥${Math.abs(diff).toFixed(0)}</td>
+          <td><button class="btn btn-sm" style="background:none;border:none;font-size:14px;color:var(--danger);cursor:pointer;padding:0 4px" onclick="event.stopPropagation();deleteBudgetItem('${esc(b.id)}')">✕</button></td>
+        </tr>`
+      })
+      
+      // Category subtotal
+      html += `<tr style="background:#f8f9fa;font-weight:600">
+        <td colspan="2" style="text-align:right;color:var(--text2)">小计</td>
+        <td style="text-align:right">¥${catPlanned.toFixed(0)}</td>
+        <td style="text-align:right">${catActual > 0 ? '¥'+catActual.toFixed(0) : '-'}</td>
+        <td style="text-align:right;color:${(catPlanned-catActual)>0?'var(--success)':'var(--danger)'}">¥${Math.abs(catPlanned-catActual).toFixed(0)}</td>
+        <td></td>
+      </tr>`
+    })
+    
+    // Grand total
+    const totalActual = budgets.reduce((s, b) => s + getBudgetActual(b), 0)
+    const totalDiff = totalPlanned - totalActual
+    html += `<tr style="font-weight:700;border-top:2px solid var(--text)">
+      <td colspan="2" style="text-align:right">合计</td>
+      <td style="text-align:right">¥${totalPlanned.toFixed(0)}</td>
+      <td style="text-align:right">${totalActual > 0 ? '¥'+totalActual.toFixed(0) : '-'}</td>
+      <td style="text-align:right;color:${totalDiff>0?'var(--success)':'var(--danger)'}">¥${Math.abs(totalDiff).toFixed(0)}</td>
+      <td></td>
+    </tr>`
+    html += `</table></div>`
+  }
+  html += '</div>'
+  return html
+}
+
+function showAddBudget(compId) {
+  const catOptions = BUDGET_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')
+  const html = `
+    <div class="form-group"><label>类别</label><select class="form-select" id="budgetCategory">${catOptions}</select></div>
+    <div class="form-group"><label>项目名称</label><input class="form-input" id="budgetItem" placeholder="如: 往返机票、酒店、报名费"></div>
+    <div class="form-group"><label>预算金额 ¥</label><input class="form-input" type="number" step="0.01" id="budgetPlanned" placeholder="0"></div>
+    <div class="form-group"><label>备注</label><input class="form-input" id="budgetNote" placeholder="如: 人均"></div>
+    <button class="btn btn-primary btn-block" onclick="saveBudgetItem('${compId}')">💾 保存</button>
+  `
+  showModal('添加预算', html)
+}
+
+function editBudgetItem(budgetId) {
+  const b = (store.budgets || []).find(x => x.id === budgetId)
+  if (!b) return
+  const catOptions = BUDGET_CATEGORIES.map(c => `<option value="${c}" ${c===b.category?'selected':''}>${c}</option>`).join('')
+  const html = `
+    <div class="form-group"><label>类别</label><select class="form-select" id="budgetCategory">${catOptions}</select></div>
+    <div class="form-group"><label>项目名称</label><input class="form-input" id="budgetItem" value="${(b.item||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-group"><label>预算金额 ¥</label><input class="form-input" type="number" step="0.01" id="budgetPlanned" value="${b.planned||0}"></div>
+    <div class="form-group"><label>备注</label><input class="form-input" id="budgetNote" value="${(b.note||'').replace(/"/g,'&quot;')}"></div>
+    <button class="btn btn-primary btn-block" onclick="saveBudgetItem('${b.compId}','${budgetId}')">💾 更新</button>
+    <button class="btn btn-danger btn-block" style="margin-top:8px" onclick="deleteBudgetItem('${budgetId}')">🗑 删除</button>
+  `
+  showModal('编辑预算', html)
+}
+
+async function saveBudgetItem(compId, existingId) {
+  const category = document.getElementById('budgetCategory').value
+  const item = document.getElementById('budgetItem').value.trim()
+  const planned = parseFloat(document.getElementById('budgetPlanned').value) || 0
+  const note = document.getElementById('budgetNote').value.trim()
+  
+  if (!item) { alert('请输入项目名称'); return }
+  
+  if (!store.budgets) store.budgets = []
+  
+  if (existingId) {
+    const idx = store.budgets.findIndex(b => b.id === existingId)
+    if (idx >= 0) {
+      store.budgets[idx] = { ...store.budgets[idx], category, item, planned, note }
+    }
+  } else {
+    const id = 'budget_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4)
+    store.budgets.push({ id, compId, category, item, planned, note })
+  }
+  
+  scheduleSave()
+  closeModal(null, 'genericModal')
+  openCompDetail(compId)  // refresh detail view
+  showToast('💾 预算已保存')
+}
+
+function deleteBudgetItem(budgetId) {
+  showConfirm('删除预算', '确定删除这条预算项目吗？', () => {
+    const b = (store.budgets || []).find(x => x.id === budgetId)
+    const compId = b ? b.compId : null
+    store.budgets = (store.budgets || []).filter(x => x.id !== budgetId)
+    scheduleSave()
+    closeModal(null, 'genericModal')
+    if (compId) openCompDetail(compId)
+    showToast('已删除')
+  })
+}
+
+function showModal(title, bodyHTML) {
+  const overlay = document.createElement('div')
+  overlay.className = 'modal-overlay'
+  overlay.id = 'genericModal'
+  overlay.onclick = e => { if (e.target === overlay) closeModal(null, 'genericModal') }
+  overlay.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>${title}</h3><button class="btn-icon" onclick="closeModal(null,'genericModal')">✕</button></div>
+    ${bodyHTML}
+  </div>`
+  document.body.appendChild(overlay)
 }
 
 // ====== MEMBERS ======
