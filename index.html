@@ -1467,7 +1467,7 @@ function openBudgetLinks(budgetId) {
     </div>`
   }
   
-  html += `<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="closeModal(null,'genericModal');renderBudgetPage()">✅ 完成</button>`
+  html += `<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="document.getElementById('genericModal').remove();renderBudgetPage()">✅ 完成</button>`
   showModal('🔗 关联账单', html)
 }
 
@@ -1601,6 +1601,10 @@ function deleteBudgetItem(budgetId) {
 }
 
 function showModal(title, bodyHTML) {
+  // Remove any existing genericModal first to avoid duplicate IDs
+  const existing = document.getElementById('genericModal')
+  if (existing) existing.remove()
+  
   const overlay = document.createElement('div')
   overlay.className = 'modal-overlay'
   overlay.id = 'genericModal'
