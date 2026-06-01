@@ -1889,81 +1889,126 @@ function renderReportCompDetail(id){
   const regs=store.registrations.filter(r=>r.compId===id)
   const compExp=txList.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
   const compInc=txList.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)
-  let html=`<div class="detail-grid" style="margin-bottom:12px">
-    <div class="detail-item"><div class="label">日期</div><div class="value">${fmtDateShort(c.date)}</div></div>
-    <div class="detail-item"><div class="label">总支出</div><div class="value" style="color:var(--danger)">¥${compExp.toFixed(2)}</div></div>
-    <div class="detail-item"><div class="label">总收入</div><div class="value" style="color:var(--success)">¥${compInc.toFixed(2)}</div></div>
-    <div class="detail-item"><div class="label">净花费</div><div class="value" style="color:${(compExp-compInc)>0?'var(--danger)':'var(--success)'}">¥${(compExp-compInc).toFixed(2)}</div></div>
-    <div class="detail-item" style="grid-column:1/-1"><div class="label">备注</div><div class="value">${c.note||'无'}</div></div></div>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-    <button class="btn btn-primary btn-sm" onclick="openRegistrationModal('${id}')">📝 报名</button>
-    <button class="btn btn-success btn-sm" onclick="openTransactionModal(null)">💸 记账</button></div>`
-  if(regs.length>0){
-    const memberTx={}
-    const publicTx=[]
-    txList.forEach(t=>{
-      const personalMids=t.memberIds||(t.memberId?[t.memberId]:[])
-      const allMids=getTxMemberIds(t)
-      if(personalMids.length>0){
-        const share=t.amount/allMids.length
-        personalMids.forEach(mid=>{
-          if(!memberTx[mid]) memberTx[mid]=0
-          if(t.type==='expense') memberTx[mid]+=share
-          else memberTx[mid]-=share
-        })
-      } else { publicTx.push(t) }
+  
+  let html=''
+  
+  // ── 概览卡片 ──
+  html+=`<div class="stats" style="margin-bottom:12px">
+    <div class="stat"><div class="label">📅 日期</div><div class="val" style="font-size:16px;color:var(--text)">${fmtDateShort(c.date)}</div></div>
+    <div class="stat"><div class="label">💸 总支出</div><div class="val" style="color:var(--danger);font-size:16px">¥${compExp.toFixed(0)}</div></div>
+    <div class="stat"><div class="label">💰 总收入</div><div class="val" style="color:var(--success);font-size:16px">¥${compInc.toFixed(0)}</div></div>
+    <div class="stat"><div class="label">📊 净花费</div><div class="val" style="color:${(compExp-compInc)>0?'var(--danger)':'var(--success)'};font-size:16px">¥${(compExp-compInc).toFixed(0)}</div></div>
+  </div>`
+  if(c.note) html+=`<div class="card" style="padding:10px 16px;margin-bottom:12px"><span style="font-size:13px;color:var(--text2)">📝 ${c.note}</span></div>`
+  
+  // ── 预算总览 ──
+  const budgets=(store.budgets||[]).filter(b=>b.compId===id)
+  if(budgets.length>0){
+    const bPlan=budgets.reduce((s,b)=>s+(b.planned||0),0)
+    const bAct=budgets.reduce((s,b)=>s+getBudgetActual(b),0)
+    html+=`<div class="card" style="margin-bottom:12px">
+      <div class="card-title">💰 预算总览 · ${budgets.length}项</div>
+      <div class="stats" style="margin-bottom:8px">
+        <div class="stat"><div class="label">预算</div><div class="val" style="color:var(--primary);font-size:16px">¥${bPlan.toFixed(0)}</div></div>
+        <div class="stat"><div class="label">实际</div><div class="val" style="color:var(--danger);font-size:16px">¥${bAct.toFixed(0)}</div></div>
+        <div class="stat"><div class="label">差额</div><div class="val" style="font-size:16px;color:${bPlan-bAct>0?'var(--success)':'var(--danger)'}">${bPlan-bAct>=0?'':'−'}¥${Math.abs(bPlan-bAct).toFixed(0)}</div></div>
+      </div>
+      <div class="scroll-x"><table class="data-table" style="font-size:12px">
+        <tr><th>类别</th><th>项目</th><th style="text-align:right">预算</th><th style="text-align:right">实际</th><th style="text-align:right">差额</th></tr>`
+    budgets.forEach(b=>{
+      const act=getBudgetActual(b)
+      const diff=(b.planned||0)-act
+      html+=`<tr>
+        <td style="color:var(--text2)">${b.category}</td>
+        <td><strong>${b.item||'未命名'}</strong>${b.note?`<div style="font-size:10px;color:var(--text2)">${b.note}</div>`:''}</td>
+        <td style="text-align:right">¥${(b.planned||0).toFixed(0)}</td>
+        <td style="text-align:right">${act>0?'¥'+act.toFixed(0):'-'}</td>
+        <td style="text-align:right;font-weight:600;color:${diff>0?'var(--success)':'var(--danger)'}">${diff>=0?'':'−'}¥${Math.abs(diff).toFixed(0)}</td>
+      </tr>`
     })
-    const byBoat={} // reportCompDetail
+    html+=`</table></div></div>`
+  }
+  
+  // ── 参赛船队（只读） ──
+  if(regs.length>0){
+    const byBoat={}
     regs.forEach(r=>{
       const boat=r.event||'未分组'
-      if(!byBoat[boat]) byBoat[boat]={members:[],totalExp:0}
-      byBoat[boat].members.push(r)
+      if(!byBoat[boat]) byBoat[boat]=[]
+      byBoat[boat].push(r)
     })
-    html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">🚤 参赛船队 (${Object.keys(byBoat).length}条船, ${regs.length}人)</h4>`
-    Object.entries(byBoat).forEach(([boatName, boat]) => {
-      const mCount=boat.members.length
+    html+=`<div class="card" style="margin-bottom:12px">
+      <div class="card-title">🚤 参赛船队 · ${Object.keys(byBoat).length}条船 · ${regs.length}人</div>`
+    Object.entries(byBoat).forEach(([boatName, crew])=>{
       const bd=c.boatDetails?c.boatDetails[boatName]||{}:{}
-      html+=`<div style="border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px">
+      html+=`<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <strong style="font-size:14px">🚤 ${boatName}</strong>
-          <span style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:12px;color:var(--text2)">${mCount}人</span>
-            <button class="btn btn-sm btn-primary" onclick="addToBoat('${c.id}','${boatName.replace(/'/g, "\\'")}')">＋加人</button>
-            <button class="btn btn-sm btn-outline" onclick="editBoatName('${c.id}','${boatName.replace(/'/g, "\\'")}')">✏️</button>
-          </span>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--text2);align-items:center">` +
-          `<span style="background:#f0f0f0;padding:3px 8px;border-radius:4px">📋 #${bd.raceNum||'-'}</span>` +
-          `<span style="background:#fff3e0;padding:3px 8px;border-radius:4px">🥇 ${bd.result||'-'}</span>` +
-          `<span style="background:#e8f5e9;padding:3px 8px;border-radius:4px">⏱️ ${bd.raceTime||'-'}</span>` +
-          `<button class="btn btn-sm btn-primary" style="padding:4px 10px;font-size:11px" onclick="editBoatDetail('${c.id}','${boatName.replace(/'/g, "\\'")}','${bd.raceNum||''}','${bd.result||''}','${bd.raceTime||''}')">✏️ 编辑</button>` +
-        `</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">`
-      boat.members.forEach(r=>{
+          <strong>🚤 ${boatName}</strong>
+          <span style="font-size:12px;color:var(--text2)">${crew.length}人`
+      if(bd.raceNum) html+=` · #${bd.raceNum}`
+      if(bd.result) html+=` · 🥇${bd.result}`
+      if(bd.raceTime) html+=` · ⏱${bd.raceTime}`
+      html+=`</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">`
+      crew.forEach(r=>{
         const m=store.members.find(x=>x.id===r.memberId)
         if(!m) return
         const ft=(m.fundType||'self')==='self'?'🙋':'🏢'
-        html+=`<span style="display:inline-flex;align-items:center;gap:4px;padding:5px 8px;background:#f8f9fa;border-radius:6px;font-size:13px">
-          ${m.name}${ft}
-          <button style="background:none;border:none;cursor:pointer;font-size:12px;color:#999;padding:0 2px" onclick="deleteReg('${r.id}')">✕</button>
-        </span>`
+        html+=`<span style="padding:4px 10px;background:#f0f0f0;border-radius:6px;font-size:12px">${m.name}${ft}</span>`
       })
       html+=`</div></div>`
     })
-    html+='</div>'
-    const publicAmt=publicTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)
-    if(publicAmt>0) html+=`<div style="margin-top:8px"><h4 style="font-size:14px;margin-bottom:4px">👥 公共开支: ¥${publicAmt.toFixed(2)}</h4></div>`
-    const memTotal=Object.values(memberTx).reduce((s,v)=>s+v,0)
-    html+=`<div style="margin-top:4px;font-size:13px;color:var(--text2)">个人支出合计: ¥${memTotal.toFixed(2)} | 公共开支: ¥${publicAmt.toFixed(2)}</div>`
-  } else html+=`<div class="empty" style="padding:20px"><p>暂无成员，在编辑比赛中勾选参赛会员</p></div>`
-  if(txList.length>0){
-    html+=`<div style="margin-top:12px"><h4 style="font-size:14px;margin-bottom:8px">💰 相关账单 (${txList.length})</h4>`
-    txList.sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>html+=txHTML(t))
-    html+='</div>'
+    html+=`</div>`
   }
+  
+  // ── 账单明细（只读） ──
+  if(txList.length>0){
+    html+=`<div class="card" style="margin-bottom:12px;padding:0;overflow:hidden">
+      <div style="padding:16px 16px 8px"><span class="card-title">💸 账单明细 · ${txList.length}笔</span></div>
+      <div class="scroll-x"><table class="data-table" style="font-size:12px">
+        <tr><th>日期</th><th>说明</th><th>关联人</th><th style="text-align:right">金额</th></tr>`
+    txList.sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>{
+      const mids=getTxMemberIds(t)
+      const names=mids.map(mid=>{const m=store.members.find(x=>x.id===mid);return m?m.name:'?'}).join(', ')
+      html+=`<tr>
+        <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+        <td>${t.note||'-'}</td>
+        <td style="font-size:11px">${names||'公共'}</td>
+        <td class="amnt ${t.type}" style="text-align:right">${t.type==='expense'?'−':'+'}${getTxCurDisplay(t)}</td>
+      </tr>`
+    })
+    html+=`</table></div></div>`
+  }
+  
+  // ── 导出 ──
+  html+=`<div style="display:flex;gap:8px;margin-top:12px">
+    <button class="btn btn-outline btn-block" onclick="exportCompReport('${id}')">📊 导出 CSV</button>
+  </div>`
+  
   document.getElementById('reportCompDetailContent').dataset.compId=id
   document.getElementById('reportCompDetailContent').innerHTML=html
 }
+
+// ── 导出比赛报表 CSV ──
+function exportCompReport(compId){
+  const c=store.competitions.find(x=>x.id===compId)
+  if(!c) return
+  const txList=store.transactions.filter(t=>t.compId===compId).sort((a,b)=>b.date.localeCompare(a.date))
+  
+  let csv='\uFEFF日期,类型,说明,关联人,金额(CNY),币种,原始金额\n'
+  txList.forEach(t=>{
+    const mids=getTxMemberIds(t)
+    const names=mids.map(mid=>{const m=store.members.find(x=>x.id===mid);return m?m.name:'?'}).join('|')||'公共'
+    csv+=`${t.date.slice(0,10)},${t.type==='expense'?'支出':'收入'},"${(t.note||'').replace(/"/g,'""')}","${names}",${t.amount.toFixed(2)},${t.currency||'CNY'},${t.origAmount||t.amount}\n`
+  })
+  
+  const a=document.createElement('a')
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv)
+  a.download=c.name+'-报表-'+new Date().toISOString().slice(0,10)+'.csv'
+  a.click()
+  showToast('📊 报表已下载')
+}
+
 
 // Normalize: returns array of member IDs for a transaction (handles old single memberId and new array memberIds + publicMemberIds)
 function getTxMemberIds(t){
@@ -2010,14 +2055,17 @@ function renderCompReport(){
   return store.competitions.map(function(c){
     const tx=store.transactions.filter(function(t){return t.compId===c.id})
     const regs=store.registrations.filter(function(r){return r.compId===c.id})
-    var exp=0; tx.forEach(function(t){if(t.type==='expense')exp+=t.amount})
+    var exp=0; var inc=0; tx.forEach(function(t){if(t.type==='expense')exp+=t.amount;else inc+=t.amount})
     const members=new Set(regs.map(function(r){return r.memberId})).size
+    const budgets=(store.budgets||[]).filter(function(b){return b.compId===c.id})
+    var bPlan=0; budgets.forEach(function(b){bPlan+=b.planned||0})
     return '<div class="list-item" style="cursor:pointer" onclick="showReportCompDetail(\'' + c.id + '\')">' +
       '<div class="icon" style="background:#e8f0fe;color:var(--primary)">🏆</div>' +
       '<div class="info"><div class="top"><span style="font-weight:600">' + c.name + '</span>' +
-      '<span class="amnt ' + (exp>0?'expense':'income') + '">¥' + exp.toFixed(2) + '</span></div>' +
+      '<span class="amnt ' + (exp>0?'expense':'income') + '">¥' + exp.toFixed(0) + '</span></div>' +
       '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + fmtDateShort(c.date) +
-      ' · ' + members + '人参赛 · ' + tx.length + '笔费用</div></div></div>'
+      ' · ' + members + '人 · ' + tx.length + '笔' +
+      (bPlan>0?' · 预算¥'+bPlan.toFixed(0):'') + '</div></div></div>'
   }).join('')
 }function renderMemberReport(){
   if(store.members.length===0) return '<div class="card"><div class="empty"><div class="empty-icon">👥</div><p>还没有会员</p></div></div>'
