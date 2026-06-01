@@ -1328,6 +1328,7 @@ function renderBudgetPage(compId) {
       
       items.forEach((b, i) => {
         const actual = getBudgetActual(b)
+        const linkedCount = getBudgetLinkedCount(b)
         const diff = (b.planned || 0) - actual
         const diffColor = diff > 0 ? 'var(--success)' : diff < 0 ? 'var(--danger)' : 'var(--text2)'
         
@@ -1338,7 +1339,11 @@ function renderBudgetPage(compId) {
             ${b.note?`<div style="font-size:11px;color:var(--text2)">${esc(b.note)}</div>`:''}
           </td>
           <td style="text-align:right;font-weight:500">¥${(b.planned||0).toFixed(0)}</td>
-          <td style="text-align:right">${actual>0?'¥'+actual.toFixed(0):'<span style="color:var(--text2)">-</span>'}</td>
+          <td style="text-align:right;cursor:pointer" onclick="openBudgetLinks('${esc(b.id)}')" title="点击关联账单">
+            ${actual>0
+              ? `<span>¥${actual.toFixed(0)}</span><div style="font-size:10px;color:var(--primary)">📎${linkedCount}笔</div>`
+              : '<span style="color:var(--text2)">-</span><div style="font-size:10px;color:var(--text2)">点击关联</div>'}
+          </td>
           <td style="text-align:right;font-weight:600;color:${diffColor}">${(diff>=0?'':'−')}¥${Math.abs(diff).toFixed(0)}</td>
           <td style="text-align:center">
             <button style="background:none;border:none;font-size:12px;color:var(--primary);cursor:pointer" onclick="editBudgetItem('${esc(b.id)}')">✏️</button>
@@ -1381,7 +1386,9 @@ function addBudgetItem() {
   
   if (!store.budgets) store.budgets = []
   const id = 'budget_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4)
-  store.budgets.push({ id, compId, category, item, planned, note })
+  const newItem = { id, compId, category, item, planned, note }
+  newItem.linkedTxnIds = autoMatchTxns(newItem)  // Auto-match on creation
+  store.budgets.push(newItem)
   scheduleSave()
   
   // Clear form
@@ -1393,17 +1400,103 @@ function addBudgetItem() {
 }
 const BUDGET_CATEGORIES = ['出行', '签证', '住宿', '吃饭', '报名', '租船桨', '器材', '其他']
 
-/** Match budget items to actual transactions by category keywords */
-function getBudgetActual(budgetItem) {
+/** Auto-match transactions to budget by keywords (used as initial suggestion) */
+function autoMatchTxns(budgetItem) {
   const txs = store.transactions.filter(t => t.compId === budgetItem.compId && t.type === 'expense')
-  // Simple matching: check if transaction note or expenseType mentions the budget item/category
   const keywords = [budgetItem.item, budgetItem.category].filter(k => k)
-  if (keywords.length === 0) return 0
-  return txs.reduce((sum, t) => {
+  if (keywords.length === 0) return []
+  return txs.filter(t => {
     const note = (t.note || '').toLowerCase()
-    const match = keywords.some(kw => note.includes(kw.toLowerCase()))
-    return match ? sum + t.amount : sum
-  }, 0)
+    return keywords.some(kw => note.includes(kw.toLowerCase()))
+  }).map(t => t.id)
+}
+
+/** Get actual spending for a budget item using linked transactions */
+function getBudgetActual(budgetItem) {
+  // Migrate: if no linkedTxnIds yet, auto-match and store
+  if (!budgetItem.linkedTxnIds) {
+    budgetItem.linkedTxnIds = autoMatchTxns(budgetItem)
+  }
+  const linkedIds = budgetItem.linkedTxnIds || []
+  return store.transactions
+    .filter(t => linkedIds.includes(t.id) && t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0)
+}
+
+/** Get linked transaction count */
+function getBudgetLinkedCount(budgetItem) {
+  if (!budgetItem.linkedTxnIds) return 0
+  return budgetItem.linkedTxnIds.filter(id => store.transactions.some(t => t.id === id)).length
+}
+
+/** Open modal to manage transaction links for a budget item */
+function openBudgetLinks(budgetId) {
+  const b = (store.budgets || []).find(x => x.id === budgetId)
+  if (!b) return
+  if (!b.linkedTxnIds) b.linkedTxnIds = autoMatchTxns(b)
+  
+  const compId = b.compId
+  const txs = store.transactions.filter(t => t.compId === compId && t.type === 'expense').sort((a,b) => b.date.localeCompare(a.date))
+  const linkedSet = new Set(b.linkedTxnIds || [])
+  
+  let html = `<div style="margin-bottom:16px;font-size:13px;color:var(--text2)">
+    <strong>${b.category} · ${b.item}</strong> ¥${(b.planned||0).toFixed(0)}
+    ${b.note ? `<div style="font-size:12px;color:var(--text2)">${b.note.replace(/'/g, "\\'").replace(/"/g, '&quot;')}</div>` : ''}
+  </div>`
+  
+  if (txs.length === 0) {
+    html += '<div class="empty" style="padding:12px"><p>该比赛还没有支出记录</p></div>'
+  } else {
+    html += '<div style="max-height:55vh;overflow-y:auto">'
+    txs.forEach(t => {
+      const linked = linkedSet.has(t.id)
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="toggleBudgetLink('${budgetId}','${t.id}',this)" data-linked="${linked}">
+        <input type="checkbox" ${linked?'checked':''} style="pointer-events:none;width:18px;height:18px;accent-color:var(--primary)" onclick="event.stopPropagation()">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px">${(t.note||'无备注').replace(/'/g, "\\'").replace(/"/g, '&quot;')}</div>
+          <div style="font-size:11px;color:var(--text2)">${fmtDate(t.date)} · ${getTxCurDisplay(t)}</div>
+        </div>
+        <span style="font-weight:600;font-size:14px;color:var(--danger);white-space:nowrap">¥${t.amount.toFixed(0)}</span>
+      </div>`
+    })
+    html += '</div>'
+    const linkedCount = txs.filter(t => linkedSet.has(t.id)).length
+    const linkedAmt = txs.filter(t => linkedSet.has(t.id)).reduce((s,t) => s+t.amount, 0)
+    html += `<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border);text-align:right;font-size:13px;color:var(--text2)">
+      已关联 ${linkedCount}/${txs.length} 笔 · ¥${linkedAmt.toFixed(0)}
+    </div>`
+  }
+  
+  html += `<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="closeModal(null,'genericModal');renderBudgetPage()">✅ 完成</button>`
+  showModal('🔗 关联账单', html)
+}
+
+function toggleBudgetLink(budgetId, txnId, rowEl) {
+  const b = (store.budgets || []).find(x => x.id === budgetId)
+  if (!b) return
+  if (!b.linkedTxnIds) b.linkedTxnIds = []
+  
+  const wasLinked = rowEl.dataset.linked === 'true'
+  if (wasLinked) {
+    b.linkedTxnIds = b.linkedTxnIds.filter(id => id !== txnId)
+    rowEl.dataset.linked = 'false'
+    rowEl.querySelector('input').checked = false
+  } else {
+    if (!b.linkedTxnIds.includes(txnId)) b.linkedTxnIds.push(txnId)
+    rowEl.dataset.linked = 'true'
+    rowEl.querySelector('input').checked = true
+  }
+  scheduleSave()
+  
+  // Update footer count
+  const txs = store.transactions.filter(t => t.compId === b.compId && t.type === 'expense')
+  const linkedSet = new Set(b.linkedTxnIds)
+  const linkedCount = txs.filter(t => linkedSet.has(t.id)).length
+  const linkedAmt = txs.filter(t => linkedSet.has(t.id)).reduce((s,t) => s+t.amount, 0)
+  const footer = rowEl.parentElement.nextElementSibling
+  if (footer && footer.tagName === 'DIV') {
+    footer.innerHTML = `已关联 ${linkedCount}/${txs.length} 笔 · ¥${linkedAmt.toFixed(0)}`
+  }
 }
 
 function renderBudgetHTML(compId) {
@@ -1474,7 +1567,9 @@ async function saveBudgetItem(compId, existingId) {
     }
   } else {
     const id = 'budget_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4)
-    store.budgets.push({ id, compId, category, item, planned, note })
+    const newItem = { id, compId, category, item, planned, note }
+    newItem.linkedTxnIds = autoMatchTxns(newItem)
+    store.budgets.push(newItem)
   }
   
   scheduleSave()
