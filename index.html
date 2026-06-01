@@ -1430,6 +1430,12 @@ function getBudgetLinkedCount(budgetItem) {
 }
 
 /** Open modal to manage transaction links for a budget item */
+function finishBudgetLinks() {
+  const m = document.getElementById('genericModal')
+  if (m) m.remove()
+  renderBudgetPage()
+}
+
 function openBudgetLinks(budgetId) {
   const b = (store.budgets || []).find(x => x.id === budgetId)
   if (!b) return
@@ -1467,7 +1473,7 @@ function openBudgetLinks(budgetId) {
     </div>`
   }
   
-  html += `<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="document.getElementById('genericModal').remove();renderBudgetPage()">✅ 完成</button>`
+  html += `<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="finishBudgetLinks()">✅ 完成</button>`
   showModal('🔗 关联账单', html)
 }
 
@@ -1487,16 +1493,6 @@ function toggleBudgetLink(budgetId, txnId, rowEl) {
     rowEl.querySelector('input').checked = true
   }
   scheduleSave()
-  
-  // Update footer count
-  const txs = store.transactions.filter(t => t.compId === b.compId && t.type === 'expense')
-  const linkedSet = new Set(b.linkedTxnIds)
-  const linkedCount = txs.filter(t => linkedSet.has(t.id)).length
-  const linkedAmt = txs.filter(t => linkedSet.has(t.id)).reduce((s,t) => s+t.amount, 0)
-  const footer = rowEl.parentElement.nextElementSibling
-  if (footer && footer.tagName === 'DIV') {
-    footer.innerHTML = `已关联 ${linkedCount}/${txs.length} 笔 · ¥${linkedAmt.toFixed(0)}`
-  }
 }
 
 function renderBudgetHTML(compId) {
