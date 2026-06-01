@@ -735,7 +735,8 @@ function mergeStore(local, server) {
     transactions: mergeArray(local.transactions, server.transactions),
     competitions: mergeArray(local.competitions, server.competitions),
     members: mergeArray(local.members, server.members),
-    registrations: mergeArray(local.registrations, server.registrations)
+    registrations: mergeArray(local.registrations, server.registrations),
+    budgets: mergeArray(local.budgets || [], server.budgets || [])
   }
   return result
 }
