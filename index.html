@@ -1269,6 +1269,7 @@ let _budgetCompId = null
 
 function renderBudgetPage(compId) {
   if (compId) _budgetCompId = compId
+  else _budgetCompId = document.getElementById('budgetCompSelect')?.value || null
   const selected = _budgetCompId || ''
   
   // Populate competition dropdown
