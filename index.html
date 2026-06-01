@@ -2,12 +2,11 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="cache-control" content="no-cache">
 <!-- v=fix-eur v2=localbackup -->
 <!-- v=sync-fix-2 pullFromServer mergeStore visibilitychange periodic -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SAIF ROWING 账本</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
@@ -200,9 +199,6 @@ body{background:var(--bg);color:var(--text);padding-bottom:70px;min-height:100vh
   <div id="memberList"></div>
   <button class="fab" onclick="openMemberModal()">+</button>
 </div>
-
-<!-- ====== PAGE: 报表 ====== -->
-<div id="page-reports" class="page container hidden">
 
 <!-- ====== PAGE: 预算 ====== -->
 <div id="page-budget" class="page container hidden">
@@ -1440,6 +1436,7 @@ function showAddBudget(compId) {
   showModal('添加预算', html)
 }
 
+function editBudgetInline(budgetId) { editBudgetItem(budgetId) }
 function editBudgetItem(budgetId) {
   const b = (store.budgets || []).find(x => x.id === budgetId)
   if (!b) return
